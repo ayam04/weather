@@ -53,6 +53,13 @@ node scripts/build-art.mjs <unpacked-mockup-dir>
 
 `build-data` writes the slug-sharded city records (`data/city/`), search and geo shards (`public/data/<hash>/`), the proxy's big-city list and `src/data/version.ts`. The hash in the path makes the shards cacheable forever.
 
+## Deploying
+
+- Repository: https://github.com/ayam04/weather (private), connected to the Vercel project `ayam-projects/weather`.
+- A push to `main` builds and deploys to production at https://weather.ayamk.in.
+- Any other branch or pull request gets its own preview URL. Preview deployments serve a `robots.txt` that blocks all crawling (`VERCEL_ENV` check in `src/app/robots.ts`), so they never compete with production in search.
+- Node 24 (`engines` in package.json). The build prerenders only `PRERENDER_SLUGS`, so a weather-API outage cannot fail a deploy.
+
 ## Environment variables
 
 | Name | Purpose |
