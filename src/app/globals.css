@@ -1,0 +1,380 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --ease-wx: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --color-sky: var(--sky);
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-p-ink: var(--p-ink);
+  --color-p-muted: var(--p-muted);
+  --color-rule: var(--rule);
+  --color-tile: var(--tile);
+  --color-bar: var(--bar);
+  --color-rain-bar: var(--rain-bar);
+  --color-sun: var(--sun);
+  --color-night: #0b1020;
+  --color-night-ink: #f3efe6;
+  --color-night-muted: #9aa6bf;
+}
+
+:root {
+  --sky: #0b1020;
+  --ink: #f3efe6;
+  --panel: #0a1124;
+  --p-ink: #f3efe6;
+  --p-muted: #9aa6bf;
+  --rule: rgba(243, 239, 230, 0.12);
+  --tile: rgba(243, 239, 230, 0.05);
+  --bar: #f1e6c8;
+  --rain-bar: #7fa8d1;
+  --sun: #ffd54a;
+  --cloud-back: #2a3550;
+  --cloud-front: #36425c;
+  --drop: #d7e6f2;
+  --ring1: 0;
+  --ring2: 0;
+  --rays: 0;
+  color-scheme: light dark;
+}
+
+html {
+  background: var(--sky);
+  -webkit-text-size-adjust: 100%;
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui {
+  display: none;
+}
+html[data-u="i"] .um {
+  display: none;
+}
+html[data-u="i"] .ui {
+  display: inline;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+@keyframes wx-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes wx-up {
+  from {
+    transform: translate3d(0, var(--rise, 28px), 0);
+  }
+}
+@keyframes wx-reveal-x {
+  from {
+    clip-path: inset(0 100% 0 0 round 3px);
+  }
+}
+@keyframes wx-reveal-y {
+  from {
+    clip-path: inset(100% 0 0 0 round 3px);
+  }
+}
+
+.enter {
+  animation:
+    wx-fade 700ms ease both,
+    wx-up 1000ms var(--ease-wx) both;
+  animation-delay: var(--delay, 0ms);
+}
+.enter-stagger {
+  --rise: 14px;
+  animation:
+    wx-fade 500ms ease both,
+    wx-up 700ms var(--ease-wx) both;
+  animation-delay: calc(300ms + var(--i, 0) * 70ms);
+}
+.grow-x {
+  animation: wx-reveal-x 900ms var(--ease-wx) both;
+  animation-delay: calc(500ms + var(--i, 0) * 80ms);
+}
+.grow-xy {
+  animation: wx-reveal-x 900ms var(--ease-wx) both;
+  animation-delay: calc(500ms + var(--i, 0) * 80ms);
+}
+@media (min-width: 48rem) {
+  .grow-xy {
+    animation-name: wx-reveal-y;
+    animation-delay: calc(550ms + var(--i, 0) * 70ms);
+  }
+}
+.grow-y {
+  animation: wx-reveal-y 900ms var(--ease-wx) both;
+  animation-delay: calc(550ms + var(--i, 0) * 70ms);
+}
+
+.dr {
+  stroke: var(--drop);
+  stroke-linecap: round;
+  opacity: 0;
+  animation: wx-drop var(--d) linear var(--l) infinite;
+}
+.fl {
+  fill: var(--drop);
+  opacity: 0;
+  animation: wx-flake var(--d) linear var(--l) infinite;
+}
+@keyframes wx-drop {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: var(--o);
+  }
+  85% {
+    opacity: var(--o);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty));
+  }
+}
+@keyframes wx-flake {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  12% {
+    opacity: var(--o);
+  }
+  50% {
+    transform: translate(calc(var(--tx) * -0.6), calc(var(--ty) * 0.5));
+  }
+  88% {
+    opacity: var(--o);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty));
+  }
+}
+
+html.js .reveal:not([data-in]) .r-x {
+  clip-path: inset(-20px 100% -20px 0 round 3px);
+}
+html.js .reveal:not([data-in]) .r-y {
+  clip-path: inset(100% 0 0 0 round 3px);
+}
+html.js .reveal:not([data-in]) .r-rot {
+  transform: rotate(0deg);
+}
+html.js .reveal:not([data-in]) .r-dash {
+  stroke-dashoffset: var(--dash-from, 1);
+}
+html.js .reveal:not([data-in]) .r-fade {
+  opacity: 0;
+}
+.r-x {
+  clip-path: inset(-20px 0 -20px 0 round 3px);
+  transition: clip-path 700ms var(--ease-wx) calc(var(--i, 0) * 35ms);
+}
+svg.r-x {
+  transition-duration: 1600ms;
+}
+.r-y {
+  clip-path: inset(0 0 0 0 round 3px);
+  transition: clip-path 700ms var(--ease-wx) calc(var(--i, 0) * 35ms);
+}
+.r-rot {
+  transform: rotate(var(--deg, 0deg));
+  transition: transform 1600ms var(--ease-spring) 150ms;
+}
+.r-dash {
+  stroke-dashoffset: var(--dash-to, 0);
+  transition: stroke-dashoffset 1400ms var(--ease-wx) 200ms;
+}
+.r-fade {
+  transition: opacity 900ms ease 300ms;
+}
+
+.px,
+.px-sun,
+.px-temp,
+.px-dim,
+.px-compact {
+  will-change: transform, opacity;
+}
+
+@supports (animation-timeline: scroll()) {
+  .px {
+    animation: wx-px linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 800px;
+  }
+  .px-sun {
+    animation: wx-px-sun linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 800px;
+  }
+  .px-temp {
+    animation: wx-px-temp linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--temp-range, 300px);
+  }
+  .px-dim {
+    animation: wx-px-dim linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--dim-range, 350px);
+  }
+  .px-headbg {
+    animation: wx-px-fadein linear both;
+    animation-timeline: scroll(root);
+    animation-range: var(--compact-from, 200px) var(--compact-to, 280px);
+  }
+  .px-compact {
+    animation: wx-px-compact linear both;
+    animation-timeline: scroll(root);
+    animation-range: var(--compact-from, 200px) var(--compact-to, 280px);
+  }
+}
+
+@supports not (animation-timeline: scroll()) {
+  .px {
+    transform: translate3d(0, calc(var(--y, 0) * var(--rate, 0) * -1px), 0);
+  }
+  .px-sun {
+    transform: translate3d(0, calc(var(--y, 0) * -0.3px), 0) scale(calc(1 - min(var(--y, 0), 400) / 1600));
+  }
+  .px-temp {
+    opacity: max(0, calc(1 - var(--y, 0) / 240));
+    transform: translate3d(0, calc(var(--y, 0) * 0.35px), 0) scale(calc(1 - min(var(--y, 0), 300) / 900));
+  }
+  .px-dim {
+    opacity: min(0.5, calc(var(--y, 0) / 700));
+  }
+  .px-compact,
+  .px-headbg {
+    opacity: clamp(0, calc((var(--y, 0) - 200) / 80), 1);
+  }
+}
+
+@keyframes wx-px {
+  to {
+    transform: translate3d(0, calc(var(--rate, 0) * -800px), 0);
+  }
+}
+@keyframes wx-px-sun {
+  50% {
+    transform: translate3d(0, -120px, 0) scale(0.75);
+  }
+  to {
+    transform: translate3d(0, -240px, 0) scale(0.75);
+  }
+}
+@keyframes wx-px-temp {
+  80% {
+    opacity: 0;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--temp-range, 300px) * 0.35), 0) scale(0.667);
+  }
+}
+@keyframes wx-px-dim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+@keyframes wx-px-fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes wx-px-compact {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-group(*) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: wx-vt-blur;
+}
+@keyframes wx-vt-blur {
+  40% {
+    filter: blur(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+  .dr,
+  .fl {
+    display: none;
+  }
+  .px,
+  .px-sun,
+  .px-temp,
+  .px-dim,
+  .px-compact,
+  .px-headbg {
+    animation: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+  }
+}
