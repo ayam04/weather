@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { ForecastView } from "@/components/forecast/view";
+import { RememberHome } from "@/components/remember-home";
 import { PRERENDER, getCity } from "@/lib/cities";
 import { getForecast } from "@/lib/met";
 import { cityMetadata, sceneViewport } from "@/lib/seo";
@@ -41,6 +42,7 @@ export default async function HomePage({ params }: PageProps<"/home/[slug]">) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }} />
+      <RememberHome slug={city.slug} name={city.label} />
       <ForecastView city={city} f={f} />
     </>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NavLink } from "@/components/nav-link";
 import { ProsePage } from "@/components/prose-page";
 
 export const metadata: Metadata = {
@@ -43,6 +44,11 @@ export default function DataSources() {
       </p>
       <h2>Sun and moon</h2>
       <p>Sunrise, sunset, day length and moon phase are calculated from standard astronomical formulas for each place&apos;s coordinates.</p>
+      <p>
+        For how we turn this data into daily figures and best-time-to-visit guides, see <NavLink href="/how-we-forecast" dir="forward">
+          how our pages work
+        </NavLink>.
+      </p>
     </ProsePage>
   );
 }

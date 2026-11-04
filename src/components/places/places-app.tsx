@@ -1,39 +1,41 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { BackIcon, PinIcon, SearchIcon } from "@/components/icons";
 import { NavLink } from "@/components/nav-link";
+import { DEFAULT_PLACES } from "@/data/default-places";
 import { nearestCity, norm, prefetchShard, searchCities, type Match } from "@/lib/client-data";
-import type { SceneKey } from "@/lib/scenes";
-import { CARD, CardArt } from "./card-art";
+import {
+  age,
+  FRESH_MS,
+  getIdle,
+  getIdleServer,
+  getPlacesServerState,
+  getPlacesState,
+  loadDefaults,
+  loadSnap,
+  newer,
+  SEED_TOLERANCE_MS,
+  setFailed,
+  setHere,
+  setPlaces,
+  subscribeIdle,
+  subscribePlaces,
+} from "@/lib/snap-store";
+import type { Snap } from "@/lib/snapshot";
+import { PlaceCard } from "./place-card";
 
-type Place = { slug: string; name: string };
-type Snap = { slug: string; name: string; tz: string; temp: number; hi: number; lo: number; scene: SceneKey; sunHidden: boolean; condition: string; fetchedAt: string };
-
-const DEFAULTS: Place[] = [
-  { slug: "london-gb", name: "London" },
-  { slug: "new-york-city-us", name: "New York City" },
-  { slug: "paris-fr", name: "Paris" },
-  { slug: "tokyo-jp", name: "Tokyo" },
-  { slug: "dubai-ae", name: "Dubai" },
-];
-const FRESH_MS = 30 * 60 * 1000;
 const regionNames = typeof Intl !== "undefined" ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+const noop = () => () => {};
+const DEFAULT_SLUGS = new Set(DEFAULT_PLACES.map((p) => p.slug));
 
-const read = <T,>(k: string): T | null => {
+function applyUnits(u: "m" | "i") {
+  document.documentElement.dataset.u = u;
   try {
-    const v = localStorage.getItem(k);
-    return v ? (JSON.parse(v) as T) : null;
-  } catch {
-    return null;
-  }
-};
-const write = (k: string, v: unknown) => {
-  try {
-    localStorage.setItem(k, JSON.stringify(v));
+    localStorage.setItem("u", u);
   } catch {}
-};
+}
 
 function useMinute() {
   const [now, setNow] = useState(0);
@@ -49,73 +51,45 @@ function useMinute() {
   return now;
 }
 
-function clockParts(tz: string, now: number) {
-  const d = new Date(now);
-  const hm = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
-  const h12 = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit", hour12: true }).format(d);
-  const [hh, mm] = hm.split(":").map(Number);
-  return { hm, h12, hA: ((hh % 12) + mm / 60) * 30, mA: mm * 6 };
-}
-
-const toF = (c: number) => Math.round((c * 9) / 5 + 32);
-const noop = () => () => {};
-const isClient = typeof window !== "undefined";
-
-function applyUnits(u: "m" | "i") {
-  document.documentElement.dataset.u = u;
-  try {
-    localStorage.setItem("u", u);
-  } catch {}
-}
-
-function initialPlaces(): Place[] {
-  if (!isClient) return [];
-  const saved = read<Place[]>("places");
-  return saved && saved.length ? saved : DEFAULTS;
-}
-
-function initialSnaps(): Record<string, Snap> {
-  if (!isClient) return {};
-  const out: Record<string, Snap> = {};
-  const here = read<Place>("here");
-  for (const p of [...(here ? [here] : []), ...initialPlaces()]) {
-    const snap = read<Snap>(`snap:${p.slug}`);
-    if (snap) out[p.slug] = snap;
-  }
-  return out;
-}
-
-export function PlacesApp() {
+export function PlacesApp({ seed }: { seed: Record<string, Snap> }) {
   const router = useRouter();
   const ready = useSyncExternalStore(noop, () => true, () => false);
-  const [places, setPlaces] = useState<Place[]>(initialPlaces);
-  const [here, setHere] = useState<Place | null>(() => (isClient ? read<Place>("here") : null));
-  const [snaps, setSnaps] = useState<Record<string, Snap>>(initialSnaps);
+  const store = useSyncExternalStore(subscribePlaces, getPlacesState, getPlacesServerState);
+  const idle = useSyncExternalStore(subscribeIdle, getIdle, getIdleServer);
   const [q, setQ] = useState("");
   const [found, setFound] = useState<{ q: string; list: Match[] }>({ q: "", list: [] });
   const [active, setActive] = useState(0);
+  const [pointed, setPointed] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [locating, setLocating] = useState<"idle" | "busy" | "denied">("idle");
+  const [fresh, setFresh] = useState<Set<string>>(() => new Set());
   const now = useMinute();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const load = useCallback(async (slug: string, force = false) => {
-    const cached = read<Snap>(`snap:${slug}`);
-    if (!force && cached && Date.now() - Date.parse(cached.fetchedAt) < FRESH_MS) return;
-    try {
-      const res = await fetch(`/api/now/${slug}`);
-      if (!res.ok) return;
-      const snap = (await res.json()) as Snap;
-      write(`snap:${slug}`, snap);
-      setSnaps((s) => ({ ...s, [slug]: snap }));
-    } catch {}
-  }, []);
+  const { places, here, snaps, failed } = store;
+
+  const cards = useMemo(
+    () => [
+      ...(here ? [{ ...here, isHere: true }] : []),
+      ...places.filter((p) => p.slug !== here?.slug).map((p) => ({ ...p, isHere: false })),
+    ],
+    [here, places],
+  );
 
   useEffect(() => {
-    const h = read<Place>("here");
-    [...(h ? [h] : []), ...initialPlaces()].forEach((p) => load(p.slug));
-  }, [load]);
+    if (!ready) return;
+    const staleDefaults: string[] = [];
+    for (const c of cards) {
+      const best = newer(snaps[c.slug], seed[c.slug]);
+      const fromSeed = !!best && best === seed[c.slug] && best !== snaps[c.slug];
+      if (age(best) < (fromSeed ? SEED_TOLERANCE_MS : FRESH_MS)) continue;
+      if (DEFAULT_SLUGS.has(c.slug)) staleDefaults.push(c.slug);
+      else void loadSnap(c.slug);
+    }
+    if (staleDefaults.length > 1) void loadDefaults();
+    else staleDefaults.forEach((slug) => void loadSnap(slug));
+  }, [ready, cards, snaps, seed]);
 
   useEffect(() => {
     let live = true;
@@ -137,20 +111,22 @@ export function PlacesApp() {
     return found.list.filter((x) => !have.has(x.slug));
   }, [found, q, places, here]);
 
-  const persist = (list: Place[]) => {
-    setPlaces(list);
-    write("places", list);
-  };
+  useEffect(() => {
+    if (!pointed) return;
+    const t = setTimeout(() => void loadSnap(pointed), 140);
+    return () => clearTimeout(t);
+  }, [pointed]);
 
   const add = (m: Match) => {
-    const next = [...places, { slug: m.slug, name: m.name }];
-    persist(next);
+    setPlaces([...places, { slug: m.slug, name: m.name }]);
+    setFresh((s) => new Set(s).add(m.slug));
     setQ("");
-    load(m.slug);
+    setPointed(null);
+    void loadSnap(m.slug);
     inputRef.current?.focus();
   };
 
-  const remove = (slug: string) => persist(places.filter((p) => p.slug !== slug));
+  const remove = (slug: string) => setPlaces(places.filter((p) => p.slug !== slug));
 
   const locate = () => {
     if (!("geolocation" in navigator)) return setLocating("denied");
@@ -159,11 +135,9 @@ export function PlacesApp() {
       async (pos) => {
         const c = await nearestCity(pos.coords.latitude, pos.coords.longitude);
         if (!c) return setLocating("idle");
-        const h = { slug: c.slug, name: c.name };
-        setHere(h);
-        write("here", h);
+        setHere({ slug: c.slug, name: c.name, source: "gps" });
         document.cookie = `home=${c.slug}; Path=/; Max-Age=31536000; SameSite=Lax`;
-        load(c.slug, true);
+        void loadSnap(c.slug);
         setLocating("idle");
         router.prefetch("/");
       },
@@ -172,26 +146,24 @@ export function PlacesApp() {
     );
   };
 
-
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!matches.length) return;
-    if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      setActive((a) => (a + 1) % matches.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((a) => (a - 1 + matches.length) % matches.length);
+      const next = (active + (e.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length;
+      setActive(next);
+      setPointed(matches[next].slug);
     } else if (e.key === "Enter") {
       e.preventDefault();
       add(matches[active]);
     } else if (e.key === "Escape") {
       setQ("");
+      setPointed(null);
     }
   };
 
-  const cards = useMemo(() => [...(here ? [{ ...here, here: true }] : []), ...places.filter((p) => p.slug !== here?.slug).map((p) => ({ ...p, here: false }))], [here, places]);
-  const searching = norm(q.split(",")[0]).trim().length >= 2;
   const qn = norm(q.split(",")[0]).trim();
+  const searching = qn.length >= 2;
 
   return (
     <div className="min-h-svh bg-night px-4 pt-4 pb-8 text-night-ink md:px-10 md:pt-8 md:pb-12">
@@ -241,6 +213,7 @@ export function PlacesApp() {
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
+              setPointed(null);
               prefetchShard(e.target.value);
             }}
             onKeyDown={onKey}
@@ -253,10 +226,14 @@ export function PlacesApp() {
         </div>
 
         {searching && (
-          <div id={listId} role="listbox" aria-label="Matching cities" className="flex w-full max-w-[560px] animate-[wx-fade_180ms_ease_both] flex-col overflow-hidden rounded-[20px] bg-[rgba(243,239,230,0.04)]">
+          <div
+            id={listId}
+            role="listbox"
+            aria-label="Matching cities"
+            className="flex w-full max-w-[560px] animate-[wx-fade_180ms_ease_both] flex-col overflow-hidden rounded-[20px] bg-[rgba(243,239,230,0.04)]"
+          >
             {matches.map((m, i) => {
-              const display = m.name;
-              const idx = norm(display).startsWith(qn) ? qn.length : 0;
+              const idx = norm(m.name).startsWith(qn) ? qn.length : 0;
               const country = regionNames?.of(m.cc) ?? m.cc;
               return (
                 <button
@@ -266,12 +243,15 @@ export function PlacesApp() {
                   aria-selected={i === active}
                   aria-label={`Add ${m.name}, ${m.region ? m.region + ", " : ""}${country}`}
                   onClick={() => add(m)}
-                  onPointerEnter={() => setActive(i)}
+                  onPointerEnter={() => {
+                    setActive(i);
+                    setPointed(m.slug);
+                  }}
                   className={`flex h-14 items-center justify-between gap-3 border-t border-[rgba(243,239,230,0.07)] pr-3 pl-5 text-left text-[17px] transition-colors duration-150 first:border-t-0 ${i === active ? "bg-[rgba(243,239,230,0.06)]" : ""}`}
                 >
                   <span className="min-w-0 truncate">
-                    <strong className="font-bold">{display.slice(0, idx)}</strong>
-                    <span className="text-[#C9D1E0]">{display.slice(idx)}</span>
+                    <strong className="font-bold">{m.name.slice(0, idx)}</strong>
+                    <span className="text-[#C9D1E0]">{m.name.slice(idx)}</span>
                     <span className="ml-2 text-sm text-night-muted">
                       {m.region && m.region !== m.name ? `${m.region}, ` : ""}
                       {country}
@@ -285,11 +265,11 @@ export function PlacesApp() {
                 </button>
               );
             })}
-            {matches.length === 0 && <div className="flex h-14 items-center px-5 text-[15px] text-night-muted">No city by that name</div>}
+            {matches.length === 0 && found.q === q && <div className="flex h-14 items-center px-5 text-[15px] text-night-muted">No city by that name</div>}
           </div>
         )}
 
-        {!here && ready && (
+        {ready && here?.source !== "gps" && (
           <button
             type="button"
             onClick={locate}
@@ -304,67 +284,26 @@ export function PlacesApp() {
         <ul className="grid min-h-[110px] grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-2.5">
           {ready &&
             cards.map((c, i) => {
-              const s = snaps[c.slug];
-              const look = CARD[s?.scene ?? "night"];
-              const clock = s && now ? clockParts(s.tz, now) : null;
+              const snap = newer(snaps[c.slug], seed[c.slug]) ?? undefined;
               return (
-                <li key={c.slug} className="relative enter" style={{ "--rise": "24px", "--delay": `${80 + i * 70}ms` } as CSSProperties}>
-                  <NavLink
-                    href={`/weather/${c.slug}`}
-                    dir="forward"
-                    aria-label={s ? `${c.name}, ${s.temp} degrees, ${s.condition.toLowerCase()}, local time ${clock?.hm}` : c.name}
-                    className="relative grid h-[100px] grid-cols-[minmax(0,1fr)_auto] items-center overflow-hidden rounded-3xl px-5 no-underline transition-[background-color,transform] duration-500 active:scale-[0.985]"
-                    style={{ background: s ? look.sky : "rgba(243,239,230,0.05)", color: look.ink }}
-                  >
-                    {s && <CardArt look={look} sunHidden={s.sunHidden} />}
-                    <span className="relative flex min-w-0 flex-col gap-1.5">
-                      <span className="flex items-center gap-1.5 text-lg font-semibold">
-                        {c.here && <PinIcon size={14} />}
-                        <span className="truncate" style={{ viewTransitionName: `city-${c.slug}` }}>
-                          {c.name}
-                        </span>
-                      </span>
-                      <span className="flex h-[18px] items-center gap-1.5 text-sm" style={{ color: look.muted }}>
-                        {clock && (
-                          <>
-                            <svg role="img" aria-label="Local time" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                              <circle cx="12" cy="12" r="9.5" />
-                              <line x1="12" y1="12" x2="12" y2="7.5" style={{ transform: `rotate(${clock.hA}deg)`, transformOrigin: "12px 12px" }} />
-                              <line x1="12" y1="12" x2="12" y2="5" strokeWidth="1.6" style={{ transform: `rotate(${clock.mA}deg)`, transformOrigin: "12px 12px" }} />
-                            </svg>
-                            <span className="um">{clock.hm}</span>
-                            <span className="ui">{clock.h12}</span>
-                          </>
-                        )}
-                      </span>
-                    </span>
-                    <span
-                      className="relative text-[40px] font-medium tracking-[-0.04em] transition-opacity duration-500"
-                      style={{ opacity: s ? 1 : 0, viewTransitionName: s ? `temp-${c.slug}` : undefined }}
-                    >
-                      {s ? (
-                        <>
-                          <span className="um">{s.temp}°</span>
-                          <span className="ui">{toF(s.temp)}°</span>
-                        </>
-                      ) : (
-                        "0°"
-                      )}
-                    </span>
-                  </NavLink>
-                  {editing && !c.here && (
-                    <button
-                      type="button"
-                      onClick={() => remove(c.slug)}
-                      aria-label={`Remove ${c.name}`}
-                      className="absolute -top-1.5 -right-1.5 flex h-7 w-7 animate-[wx-fade_160ms_ease_both] items-center justify-center rounded-full bg-night-ink text-night shadow"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </button>
-                  )}
-                </li>
+                <PlaceCard
+                  key={c.slug}
+                  slug={c.slug}
+                  name={c.name}
+                  here={c.isHere}
+                  snap={snap}
+                  failed={!snap && !!failed[c.slug]}
+                  now={now}
+                  index={i}
+                  added={fresh.has(c.slug)}
+                  eager={(idle && i < 8) || fresh.has(c.slug)}
+                  editing={editing}
+                  onRemove={c.isHere ? undefined : () => remove(c.slug)}
+                  onRetry={() => {
+                    setFailed(c.slug, false);
+                    void loadSnap(c.slug, true);
+                  }}
+                />
               );
             })}
         </ul>

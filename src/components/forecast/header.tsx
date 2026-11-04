@@ -1,4 +1,4 @@
-import { MenuIcon, PinIcon, SearchIcon, WxIcon } from "@/components/icons";
+import { PinIcon, SearchIcon, WxIcon } from "@/components/icons";
 import { NavLink } from "@/components/nav-link";
 import { T } from "@/components/units";
 import type { Icon } from "@/lib/forecast";
@@ -35,13 +35,11 @@ export function ForecastHeader({ name, slug, temp, icon }: { name: string; slug:
         <NavLink
           href="/places"
           dir="forward"
-          className="hidden h-11 items-center gap-2 rounded-full bg-rule pr-[18px] pl-3.5 text-[15px] font-medium transition-[background-color] duration-200 hover:bg-[color-mix(in_srgb,var(--rule)_60%,var(--ink)_14%)] md:flex"
+          aria-label="Search a city"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-rule transition-[background-color] duration-200 hover:bg-[color-mix(in_srgb,var(--rule)_60%,var(--ink)_14%)] md:w-auto md:gap-2 md:pr-[18px] md:pl-3.5 md:text-[15px] md:font-medium"
         >
-          <SearchIcon />
-          Search a city
-        </NavLink>
-        <NavLink href="/places" dir="forward" aria-label="Saved places" className="flex h-11 w-11 items-center justify-center rounded-full">
-          <MenuIcon size={22} />
+          <SearchIcon size={18} />
+          <span className="hidden md:inline">Search a city</span>
         </NavLink>
       </div>
     </header>

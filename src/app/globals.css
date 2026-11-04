@@ -181,6 +181,29 @@ html[data-u="i"] .ui {
   }
 }
 
+.wx-shimmer {
+  background: linear-gradient(100deg, transparent 20%, rgba(243, 239, 230, 0.07) 45%, transparent 70%);
+  background-size: 220% 100%;
+  animation: wx-shimmer 1.4s linear infinite;
+}
+.wx-bone {
+  background: rgba(243, 239, 230, 0.1);
+  animation: wx-bone 1.4s ease-in-out infinite;
+}
+@keyframes wx-shimmer {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+@keyframes wx-bone {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 html.js .reveal:not([data-in]) .r-x {
   clip-path: inset(-20px 100% -20px 0 round 3px);
 }

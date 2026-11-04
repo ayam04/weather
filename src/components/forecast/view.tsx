@@ -25,7 +25,7 @@ export async function ForecastView({ city, f, extra }: { city: City; f: Forecast
   const climate = city.featured ? await getClimate(city.slug) : null;
 
   return (
-    <ViewTransition>
+    <ViewTransition update="none">
       <style>{`:root{${vars}}`}</style>
       <SkyArt layers={sc.layers} />
       <ForecastHeader name={city.label} slug={city.slug} temp={f.now.temp} icon={f.hours[0]?.icon ?? "cloud"} />

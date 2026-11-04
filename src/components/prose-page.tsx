@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 
 export function ProsePage({ title, updated, children }: { title: string; updated?: string; children: ReactNode }) {
   return (
-    <ViewTransition>
+    <ViewTransition update="none">
       <style>{`:root{--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)}`}</style>
       <div className="min-h-svh bg-night px-4 pt-4 pb-14 text-night-ink md:px-10 md:pt-8">
         <div className="mx-auto max-w-[720px]">

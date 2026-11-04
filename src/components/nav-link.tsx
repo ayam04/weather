@@ -1,35 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 
-type Props = Omit<ComponentProps<typeof Link>, "href" | "prefetch"> & { href: string; dir?: "forward" | "back" };
+type Props = Omit<ComponentProps<typeof Link>, "href" | "prefetch"> & {
+  href: string;
+  dir?: "forward" | "back";
+  eager?: boolean;
+};
 
-const warmed = new Set<string>();
-
-export function NavLink({ href, dir, onPointerEnter, onFocus, onTouchStart, ...rest }: Props) {
-  const router = useRouter();
-  const warm = () => {
-    if (warmed.has(href)) return;
-    warmed.add(href);
-    router.prefetch(href);
-  };
+export function NavLink({ href, dir, eager = false, onPointerEnter, onFocus, onTouchStart, ...rest }: Props) {
+  const [intent, setIntent] = useState(false);
+  const full = eager || intent;
   return (
     <Link
       href={href}
-      prefetch={false}
+      prefetch={full ? true : "auto"}
       transitionTypes={dir ? [dir === "forward" ? "nav-forward" : "nav-back"] : undefined}
       onPointerEnter={(e) => {
-        warm();
+        setIntent(true);
         onPointerEnter?.(e);
       }}
       onFocus={(e) => {
-        warm();
+        setIntent(true);
         onFocus?.(e);
       }}
       onTouchStart={(e) => {
-        warm();
+        setIntent(true);
         onTouchStart?.(e);
       }}
       {...rest}

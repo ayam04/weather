@@ -109,14 +109,6 @@ export function PinIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export function MenuIcon({ size = 22 }: { size?: number }) {
-  return (
-    <svg aria-hidden width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-      <path d="M4 8h16M4 16h16" />
-    </svg>
-  );
-}
-
 export function SearchIcon({ size = 16 }: { size?: number }) {
   return (
     <svg aria-hidden width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

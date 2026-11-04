@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { DEFAULT_PLACES } from "@/data/default-places";
+import { getPlacesState, goodConnection, loadSnap, whenIdle } from "@/lib/snap-store";
 
 const STALE_MS = 35 * 60 * 1000;
 
@@ -36,6 +38,24 @@ export function MotionRuntime() {
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, [pathname]);
+
+  useEffect(() => {
+    if (pathname === "/places" || !goodConnection()) return;
+    return whenIdle(() => {
+      const defaults = new Set(DEFAULT_PLACES.map((p) => p.slug));
+      const { here, places } = getPlacesState();
+      const own = [...(here ? [here] : []), ...places].filter((p) => !defaults.has(p.slug)).slice(0, 12);
+      own.forEach((p, i) => setTimeout(() => void loadSnap(p.slug), i * 150));
+    }, 4000);
+  }, [pathname]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const stamp = document.querySelector<HTMLElement>("[data-fetched-at]")?.dataset.fetchedAt;
+      if (document.visibilityState === "visible" && stamp && Date.now() - Date.parse(stamp) > STALE_MS) router.refresh();
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [pathname, router]);
 
   useEffect(() => {
     const onVisible = () => {

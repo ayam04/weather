@@ -9,6 +9,7 @@ export type Hour = { iso: string; label: Clock | null; icon: Icon; temp: number;
 export type Day = { key: string; label: string; long: string; icon: Icon; hi: number; lo: number; precip: number; condition: string };
 
 export type Forecast = {
+  partial?: boolean;
   fetchedAt: string;
   fetchedLocal: Clock;
   tz: string;
