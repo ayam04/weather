@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  htmlLimitedBots: /NoHtmlLimitedBots/,
   outputFileTracingRoot: path.join(__dirname),
   outputFileTracingIncludes: {
     "/**": ["./data/city/**", "./data/climate/**", "./assets/fonts/**"],

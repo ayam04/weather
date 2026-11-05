@@ -26,3 +26,6 @@ Why: the forecast starts now, so a late-evening "today" high would only cover th
 
 2026-11-04 Decision: rain tile covers the next 12 hours, not the next hour.
 Why: the mockup's minute-by-minute bars need nowcast data MET only offers for the Nordics. Hourly amounts for 12 hours are real data everywhere.
+
+2026-11-05 Decision: crawlers get the same cached page as browsers (`htmlLimitedBots` set to a pattern no real crawler sends).
+Why: Next's default bot list (Bingbot, DuckDuckBot, Yandex, Applebot, Google-InspectionTool, link-preview bots) bypassed the CDN with a fresh server render per visit, 60% heavier because partial prefetching embeds a second copy of the page. Every page's metadata and content are already in the cached HTML, so the blocking bot render added cost and size with nothing to gain.
