@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { MotionRuntime } from "@/components/motion-runtime";
 import { PREFS_SCRIPT } from "@/components/units";
 import { SITE } from "@/lib/site";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         {children}
         <MotionRuntime />
+        <Analytics />
       </body>
     </html>
   );

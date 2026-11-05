@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Privacy() {
   return (
-    <ProsePage title="Privacy policy" updated="4 November 2026">
+    <ProsePage title="Privacy policy" updated="5 November 2026">
       <h2>What stays on your device</h2>
       <ul>
         <li>Your saved places, unit choice (°C or °F) and the last forecast for each saved place are kept in your browser&apos;s local storage. They never leave your device.</li>
@@ -21,15 +21,23 @@ export default function Privacy() {
         The site is hosted on Vercel. Like any web host, it handles your IP address to deliver pages, and gives us an approximate location from it so the home
         page can show weather near you. We do not store that location or build a profile from it.
       </p>
-      <h2>Advertising and analytics</h2>
+      <h2>Analytics</h2>
       <p>
-        We may show ads from Google AdSense and use analytics to count visits. If we do, those services may use cookies or similar technology to measure and
-        personalise ads, and visitors in the European Economic Area, the UK and Switzerland will be asked for consent first through a certified consent tool.
-        You can learn how Google uses data at{" "}
+        We count visits with Vercel Web Analytics. It does not use cookies and does not identify you: visits are grouped using a hash that changes every day,
+        and we see only totals such as page views, the pages visited, the referring site, country and device type. See{" "}
+        <a href="https://vercel.com/docs/analytics/privacy-policy" rel="noopener">
+          Vercel&apos;s analytics privacy policy
+        </a>
+        .
+      </p>
+      <h2>Advertising</h2>
+      <p>
+        We may later show ads from Google AdSense. If we do, Google may use cookies or similar technology to measure and personalise ads, and visitors in the
+        European Economic Area, the UK and Switzerland will be asked for consent first through a certified consent tool. You can learn how Google uses data at{" "}
         <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">
           policies.google.com/technologies/partner-sites
         </a>
-        . This page will be updated before any of these are switched on.
+        . This page will be updated before ads are switched on.
       </p>
       <h2>Contact</h2>
       <p>
