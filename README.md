@@ -68,7 +68,8 @@ node scripts/build-art.mjs <unpacked-mockup-dir>
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin. Defaults to `https://weather.ayamk.in` |
 | `MET_USER_AGENT` | Override the User-Agent sent to MET Norway |
 | `PRERENDER_SLUGS` | Comma-separated cities to prerender at build. Defaults to `london-gb` |
-| `GOOGLE_SITE_VERIFICATION` | Search Console meta tag |
+| `GOOGLE_SITE_VERIFICATION` | Search Console verification token (the `content` value of Google's meta tag) |
+| `BING_SITE_VERIFICATION` | Bing Webmaster Tools `msvalidate.01` token, only if not importing from Search Console |
 | `ADSENSE_PUBLISHER_ID` | Enables `/ads.txt` (`pub-...`) |
 | `NEXT_PUBLIC_ADS_ENABLED`, `NEXT_PUBLIC_ADSENSE_CLIENT` | Turn on the reserved ad slot. Off by default |
 

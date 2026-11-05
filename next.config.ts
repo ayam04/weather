@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   outputFileTracingRoot: path.join(__dirname),
   outputFileTracingIncludes: {
-    "/**": ["./data/city/**", "./data/climate/**"],
+    "/**": ["./data/city/**", "./data/climate/**", "./assets/fonts/**"],
   },
   async headers() {
     return [

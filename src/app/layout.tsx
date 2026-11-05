@@ -22,7 +22,10 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: SITE.name, locale: "en_GB" },
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true, "max-image-preview": "large" },
-  other: process.env.GOOGLE_SITE_VERIFICATION ? { "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION } : {},
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+  },
 };
 
 export const viewport: Viewport = {

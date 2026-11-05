@@ -1,8 +1,10 @@
 import { ViewTransition, type ReactNode } from "react";
 import { AdSlot } from "@/components/ad-slot";
 import { ClimateSection } from "@/components/climate-section";
+import { Destinations } from "@/components/destinations";
 import { Nearby } from "@/components/nearby";
 import { Reveal } from "@/components/reveal";
+import { ShareButton } from "@/components/share-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SkyArt } from "@/components/sky-art";
 import { Clk } from "@/components/units";
@@ -58,14 +60,18 @@ export async function ForecastView({ city, f, extra }: { city: City; f: Forecast
             <CloudTile f={f} />
             <MoonTile f={f} />
           </Reveal>
-          <p className="mx-auto mt-5 max-w-[1600px] text-[13px] text-p-muted">
-            Updated <Clk t={f.fetchedLocal} /> local time. Forecast data from MET Norway, model output, not an official warning.
-          </p>
+          <div className="mx-auto mt-5 flex max-w-[1600px] flex-wrap items-center justify-between gap-3">
+            <p className="text-[13px] text-p-muted">
+              Updated <Clk t={f.fetchedLocal} /> local time. Forecast data from MET Norway, model output, not an official warning.
+            </p>
+            <ShareButton title={`${city.label} weather`} text={`${city.label}: ${f.now.temp}°C and ${f.condition.toLowerCase()} right now.`} />
+          </div>
         </section>
 
         <AdSlot id="after-details" />
         {climate && <ClimateSection name={city.label} c={climate} />}
         <Nearby name={city.label} near={city.near} />
+        <Destinations current={city.slug} />
         {extra}
         <SiteFooter />
       </main>

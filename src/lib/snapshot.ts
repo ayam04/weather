@@ -2,7 +2,7 @@ import { cacheLife } from "next/cache";
 import { DEFAULT_PLACES } from "@/data/default-places";
 import { getCity, type City } from "./cities";
 import type { Forecast } from "./forecast";
-import { getForecast } from "./met";
+import { getForecast, loadForecast } from "./met";
 import type { SceneKey } from "./scenes";
 
 export type Snap = {
@@ -40,7 +40,18 @@ export async function getSnap(slug: string): Promise<Snap | null> {
 
 export async function getDefaultSnaps(): Promise<Record<string, Snap>> {
   "use cache";
-  cacheLife({ stale: 300, revalidate: 900, expire: 604800 });
-  const list = await Promise.all(DEFAULT_PLACES.map((p) => getSnap(p.slug).catch(() => null)));
-  return Object.fromEntries(list.filter((s): s is Snap => s !== null).map((s) => [s.slug, s]));
+  const list = await Promise.all(
+    DEFAULT_PLACES.map(async (p) => {
+      try {
+        const city = await getCity(p.slug);
+        return city ? toSnap(city, await loadForecast(city)) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  const snaps = list.filter((s): s is Snap => s !== null);
+  if (snaps.length === DEFAULT_PLACES.length) cacheLife({ stale: 300, revalidate: 900, expire: 604800 });
+  else cacheLife({ stale: 60, revalidate: 300, expire: 604800 });
+  return Object.fromEntries(snaps.map((s) => [s.slug, s]));
 }

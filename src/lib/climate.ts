@@ -36,22 +36,35 @@ export function summarise(c: Climate) {
   const coolest = by((x) => -x.hi)[0];
   const wettest = by((x) => x.rain)[0];
   const driest = by((x) => -x.rain)[0];
+  const rainOk = rainTrusted(c);
   const wetMedian = [...m.map((x) => x.wet)].sort((a, b) => a - b)[6];
-  let best = idx.filter((i) => m[i].hi >= 18 && m[i].hi <= 30 && m[i].wet <= wetMedian);
-  let basis: "comfortDry" | "comfort" | "warmest" | "mildest" = "comfortDry";
-  if (best.length < 2) {
-    best = idx.filter((i) => m[i].hi >= 18 && m[i].hi <= 31);
+  const comfy = (i: number) => m[i].hi >= 18 && m[i].hi <= 30;
+  let best: number[];
+  let basis: "comfortDry" | "comfort" | "warmest" | "driest" | "none";
+  if (m[warmest].hi < 18) {
+    best = by((x) => x.hi).slice(0, 3);
+    basis = "warmest";
+  } else if (m[coolest].hi > 30 || idx.filter(comfy).length < 2) {
+    if (rainOk) {
+      best = by((x) => -x.wet).slice(0, 4);
+      basis = "driest";
+    } else {
+      best = [];
+      basis = "none";
+    }
+  } else if (rainOk) {
+    best = idx.filter((i) => comfy(i) && m[i].wet <= wetMedian);
+    basis = "comfortDry";
+    if (best.length < 2) {
+      best = idx.filter(comfy);
+      basis = "comfort";
+    }
+  } else {
+    best = idx.filter(comfy);
     basis = "comfort";
   }
-  if (best.length < 2 && m[warmest].hi < 18) {
-    best = by((x) => x.hi).slice(0, 3).sort((a, b) => a - b);
-    basis = "warmest";
-  }
-  if (best.length < 2 && m[coolest].hi > 30) {
-    best = by((x) => -x.hi).slice(0, 4).sort((a, b) => a - b);
-    basis = "mildest";
-  }
-  return { warmest, coolest, wettest, driest, best: ranges(best), basis };
+  best = [...best].sort((a, b) => a - b);
+  return { warmest, coolest, wettest, driest, best: ranges(best), bestMonths: [...best].sort((x, y) => x - y), basis };
 }
 
 function ranges(months: number[]): string {
@@ -65,4 +78,13 @@ function ranges(months: number[]): string {
     return s === e ? MONTHS[s] : `${MONTHS[s]} to ${MONTHS[e]}`;
   });
   return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}` : parts[0];
+}
+
+export function rainTrusted(c: Pick<Climate, "flags">) {
+  return c.flags.includes("rain-modelled") || !c.flags.some((f) => f.startsWith("rain-suspect"));
+}
+
+export async function getAllClimates(slugs: string[]) {
+  const list = await Promise.all(slugs.map(async (slug) => [slug, await getClimate(slug)] as const));
+  return list.filter((x): x is readonly [string, Climate] => x[1] !== null);
 }

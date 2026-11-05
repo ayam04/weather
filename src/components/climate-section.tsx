@@ -1,10 +1,10 @@
 import type { CSSProperties } from "react";
 import { Precip, T } from "@/components/units";
 import { Reveal } from "@/components/reveal";
-import { MONTHS, summarise, type Climate } from "@/lib/climate";
+import { MONTHS, rainTrusted, summarise, type Climate } from "@/lib/climate";
 
 export function ClimateSection({ name, c }: { name: string; c: Climate }) {
-  const rainOk = !c.flags.some((f) => f.startsWith("rain-suspect"));
+  const rainOk = rainTrusted(c);
   const modelled = c.flags.includes("temps-modelled") || c.flags.includes("rain-modelled");
   const s = summarise(c);
   const lo0 = Math.min(...c.months.map((m) => m.lo));
@@ -83,7 +83,16 @@ export function ClimateSection({ name, c }: { name: string; c: Climate }) {
           <div>
             <h3 className="text-xl font-semibold md:text-2xl">Best time to visit {name}</h3>
             <p className="mt-2 text-base leading-relaxed text-p-ink/85">
-              Best months: <strong className="font-semibold">{s.best}</strong>.{" "}
+              {s.basis === "none" ? (
+                <>
+                  We don&apos;t recommend particular months for {name}. It is hot all year, and the local rainfall records did not pass our quality check, so we
+                  can&apos;t reliably tell the dry season from the wet one.
+                </>
+              ) : (
+                <>
+                  Best months: <strong className="font-semibold">{s.best}</strong>.{" "}
+                </>
+              )}
               {s.basis === "comfortDry" && (
                 <>
                   Average highs sit between <T c={18} /> and <T c={30} /> and rainy days are below the yearly middle.
@@ -95,7 +104,7 @@ export function ClimateSection({ name, c }: { name: string; c: Climate }) {
                 </>
               )}
               {s.basis === "warmest" && <>These are the warmest months, with the longest days.</>}
-              {s.basis === "mildest" && <>These months have the least extreme heat of the year.</>}
+              {s.basis === "driest" && <>It is hot all year here, so these are simply the months with the fewest rainy days.</>}
             </p>
           </div>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-[15px]">

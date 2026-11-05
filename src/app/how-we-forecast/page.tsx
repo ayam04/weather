@@ -21,7 +21,8 @@ export default function HowWeForecast() {
       <h2>Climate and best-time-to-visit guides</h2>
       <p>
         The best months shown on destination pages come from a fixed rule applied to the averages: months with average highs between 18°C and 30°C and fewer rainy
-        days than the yearly middle. Where no month fits, we say which rule we used instead. Each page names the weather station its figures come from, so you can check them against the original records.
+        days than the yearly middle. Where it is hot all year we pick the four driest months, where it is never warm the three warmest, and where a hot
+        place&apos;s rainfall records fail our quality check we make no recommendation. Each page names the weather station its figures come from, so you can check them against the original records.
       </p>
       <h2>Corrections</h2>
       <p>

@@ -27,7 +27,7 @@ export function SiteFooter({ tone = "panel" }: { tone?: "panel" | "night" }) {
           </ul>
         </nav>
         <p className={`text-[13px] ${muted}`}>
-          Forecasts: <a className="underline underline-offset-2" href="https://api.met.no/" rel="noopener">MET Norway</a> (CC BY 4.0). Not official warnings. © {SITE.copyrightYear}
+          Forecasts: <a className="underline underline-offset-2" href="https://api.met.no/" rel="noopener">MET Norway</a>, <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" rel="noopener license">CC BY 4.0</a>, reformatted. Not official warnings. © {SITE.copyrightYear}
         </p>
       </div>
     </footer>
