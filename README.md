@@ -1,76 +1,152 @@
 # weather.ayamk.in
 
-Live local weather built from the owner's mockup (`Downloads/Weather app.html`): an animated sky per condition, hourly and 9-day forecast, nine detail tiles, a saved-places screen with city search, and month-by-month climate guides for 25 travel destinations.
+Live weather for 34,000 cities with an animated sky that matches the conditions outside, an hourly and 9-day forecast, nine detail tiles, and month-by-month climate guides for 25 travel destinations.
 
-Next.js 16 (App Router, Cache Components), React 19.3, Tailwind CSS 4, TypeScript. No database.
+**Live site: [weather.ayamk.in](https://weather.ayamk.in)**
 
-## Run it
+| Night in Los Angeles | Day in Dubai |
+| --- | --- |
+| ![Los Angeles at night: stars, moon and clouds over a dark sky](docs/screenshots/night-desktop.png) | ![Dubai by day: a bright sun over a blue sky](docs/screenshots/day-desktop.png) |
 
-```bash
-npm install
-npm run dev          # http://localhost:3000
-npm run build && npm start
-```
+| Saved places on a phone | Best time to visit |
+| --- | --- |
+| ![Places screen with London, New York, Paris, Tokyo, Dubai and Singapore cards](docs/screenshots/places-mobile.png) | ![Table of average daily highs by month for 25 destinations](docs/screenshots/climate-table.png) |
 
-Node 24. No environment variables are required. Optional ones are listed below.
+## Features
+
+- **Scene per condition.** Nine sky scenes (clear, cloudy, rain, storm, snow, each by day and night) drive the art and the whole colour palette, so a city at 2 AM looks like 2 AM.
+- **Forecast.** Current conditions, the next 24 hours, a 9-day outlook, and tiles for rain, wind, sunrise and sunset, humidity, feels-like, UV, pressure, cloud cover and moon phase.
+- **City search across 34,197 places** with more than 15,000 people. Search and nearest-city lookup run in the browser against static files, so they cost no server calls.
+- **Places.** A saved list of cities with live temperature and local time, kept on the device. No account.
+- **Climate guides** for 25 destinations: monthly highs, lows, rainfall and rainy days for 2015 to 2024 from weather-station records, plus best months to visit.
+- **[Best time to visit](https://weather.ayamk.in/best-time-to-visit)** hub with a downloadable CSV under CC BY 4.0.
+- **°C/°F and 12/24-hour time** chosen before first paint, so cached pages are right for every visitor without a flash.
+- **Installable** as an app (manifest, maskable icons), with share cards that show the live temperature.
+
+## Stack
+
+Next.js 16 (App Router, Cache Components, partial prefetching), React 19.3 (`ViewTransition`, `Activity`), Tailwind CSS 4, TypeScript. Hosted on Vercel. No database, no API keys.
 
 ## How a request is served
 
 | Route | What happens | Cost per visit |
 | --- | --- | --- |
-| `/` | `src/proxy.ts` picks a city (saved `home` cookie, else nearest city over 100k people to Vercel's IP location) and rewrites to `/home/<slug>` | 1 tiny proxy run, page from cache |
-| `/weather/<slug>` | Static page from the CDN. Regenerated in the background at most every 30 minutes, only when visited | 0 functions on a cache hit |
-| `/places` | Static page with the 12 default cities' current weather built in (refreshed every 15 min). Saved places and snapshots live in `localStorage` through one shared store (`src/lib/snap-store.ts`) | CDN hit; a first-time visitor makes no weather requests |
-| `/api/defaults` | All 12 default snapshots in one response, used only when a served Places page is older than its window | 1 function per 15 min |
-| `/api/now/<slug>` | Small JSON for a user-added city, `s-maxage=1800` at the CDN. Fetched when a card is added, or ahead of time when a search result is hovered or arrowed to | 1 function per city per 30 min |
-| City search | Prefix shards in `public/data/<version>/s/`, immutable, fetched once and filtered on the device | 0 functions |
-| Precise location | Geo-grid shards in `public/data/<version>/g/`, nearest city computed on the device | 0 functions |
+| `/` | `src/proxy.ts` picks a city (a saved `home` cookie, else the nearest city over 100,000 people to the visitor's IP location) and rewrites to `/home/<slug>` | One small proxy run, page from cache |
+| `/weather/<slug>` | Cached page from the CDN, regenerated in the background at most every 30 minutes and only when visited | No function on a cache hit |
+| `/places` | Cached page with the 12 default cities' weather built in (refreshed every 15 minutes). Saved places live in `localStorage` through one store (`src/lib/snap-store.ts`) | CDN hit; a first visit makes no weather requests |
+| `/api/defaults` | All 12 default snapshots in one response, used only when the served Places page is older than its window | One function per 15 minutes |
+| `/api/now/<slug>` | Small JSON for a city the visitor adds, cached at the CDN for 30 minutes. Fetched when a card is added, or ahead of time when a search result is hovered | One function per city per 30 minutes |
+| City search | Prefix shards in `public/data/<version>/s/`, immutable, filtered on the device | None |
+| Precise location | Geo-grid shards in `public/data/<version>/g/`, nearest city computed on the device | None |
 
-Weather comes from MET Norway (`src/lib/met.ts`). Every call sends an identifying User-Agent, uses at most 4-decimal coordinates, runs through a 4-request concurrency cap, retries 503s with backoff, and falls back from `complete` to `compact`. The mapped result, not the raw 100 KB response, is cached for 30 minutes per city (`'use cache'` + `cacheLife`). So MET sees at most one request per city per 30 minutes regardless of traffic.
+**Forecast data.** `src/lib/met.ts` calls MET Norway with an identifying User-Agent, at most 4-decimal coordinates and a concurrency cap of 4. Server errors, network failures and truncated or stale responses are retried with backoff, falling back from the `complete` to the `compact` product and to a less precise coordinate (a fresh upstream cache entry), all inside a 15-second budget. A 429 is never retried. The mapped result, not the raw 100 KB response, is cached per city with `'use cache'` and `cacheLife`, so MET sees at most one request per city per 30 minutes whatever the traffic.
 
-Pages use `ensureStatic = "navigation"`: the first visit to an uncached city waits for one complete render (about 1 second), then everyone gets the cached page. Nobody ever sees a skeleton that swaps to content.
+**No polling.** A tab left open refreshes once when you come back to it, and only if its data is older than 35 minutes.
 
-There is no polling. A tab left open refreshes once when you return to it, and only if its data is older than 35 minutes.
+**First visits.** City pages use `ensureStatic = "navigation"`: the first visit to an uncached city waits for one full render (about a second), then every visitor gets the cached page. Nobody sees a skeleton that swaps to content.
+
+**Crawlers** get the same cached HTML as browsers (`htmlLimitedBots` in `next.config.ts`). `robots.txt` names the main search, AI and link-preview crawlers and allows them. Preview deployments serve a `robots.txt` that blocks everything.
 
 ## Motion
 
-- Scene art is the mockup's SVG, converted at build time (`scripts/build-art.mjs`). Rain and snow are regenerated from the mockup's measured parameters as CSS-animated lines, about a third of the original markup.
+- Scene art is SVG compiled at build time (`scripts/build-art.mjs`). Rain and snow are CSS-animated lines.
 - Entrance motion (hero rise, sheet slide-up, staggered hours, growing bars) is CSS keyframes, so it starts on first paint without waiting for JavaScript.
-- Parallax uses CSS scroll timelines (off the main thread), with a one-listener fallback for browsers without them.
-- Tile gauges animate once when scrolled into view (one shared IntersectionObserver).
+- Parallax uses CSS scroll timelines, with a single scroll listener as the fallback.
+- Tile gauges animate once when scrolled into view, through one shared `IntersectionObserver`.
 - Page changes use React `<ViewTransition>`: scenes crossfade, and a Places card's name and temperature morph into the city page.
-- °C/°F and 12/24-hour time are both in the HTML and chosen by a tiny script before first paint, so cached pages are correct for every visitor with no flash.
+- Each page's palette is set by `RootVars` (`src/components/root-vars.tsx`), which switches itself off while Next keeps the page hidden for back navigation.
 - `prefers-reduced-motion` turns all of it off.
 
-## Data pipeline
+## Getting started
 
-All generated files are committed. Rebuild only when the source data changes.
+Requires Node 24.
 
 ```bash
-node scripts/build-data.mjs <geonames-dir>     # cities15000.txt + admin1CodesASCII.txt + countryInfo.txt from download.geonames.org
-node scripts/build-climate.mjs <ghcn-dir> [slug...]   # ghcnd-stations.txt + ghcnd-inventory.txt from ncei.noaa.gov
-node scripts/build-art.mjs <unpacked-mockup-dir>
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-`build-data` writes the slug-sharded city records (`data/city/`), search and geo shards (`public/data/<hash>/`), the proxy's big-city list and `src/data/version.ts`. The hash in the path makes the shards cacheable forever.
+No environment variables are needed to run it locally.
 
-## Deploying
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` / `npm start` | Production build and server |
+| `npm run check` | ESLint and TypeScript, the same checks CI runs before the build |
+| `npm run data:cities -- <geonames-dir>` | Rebuilds city records and search shards from GeoNames |
+| `npm run data:climate -- <ghcn-dir> [slug...]` | Rebuilds climate averages from NOAA GHCN-Daily |
+| `npm run data:art -- <design-export-dir>` | Recompiles the scene SVG. Needs the original design export, which is not in this repository; the compiled art is committed |
+| `npm run indexnow` | Submits the sitemap URLs to IndexNow. Run it after destination pages change, not on every deploy |
 
-- Repository: https://github.com/ayam04/weather (private), connected to the Vercel project `ayam-projects/weather`.
-- A push to `main` builds and deploys to production at https://weather.ayamk.in.
-- Any other branch or pull request gets its own preview URL. Preview deployments serve a `robots.txt` that blocks all crawling (`VERCEL_ENV` check in `src/app/robots.ts`), so they never compete with production in search.
-- Node 24 (`engines` in package.json). The build prerenders only `PRERENDER_SLUGS`, so a weather-API outage cannot fail a deploy.
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck and a production build on every push to `main` and every pull request.
 
 ## Environment variables
+
+All optional for local development. Copy `.env.example` to `.env.local` to set any of them.
 
 | Name | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin. Defaults to `https://weather.ayamk.in` |
-| `MET_USER_AGENT` | Override the User-Agent sent to MET Norway |
-| `PRERENDER_SLUGS` | Comma-separated cities to prerender at build. Defaults to `london-gb` |
-| `GOOGLE_SITE_VERIFICATION` | Search Console verification token (the `content` value of Google's meta tag) |
-| `BING_SITE_VERIFICATION` | Bing Webmaster Tools `msvalidate.01` token, only if not importing from Search Console |
-| `ADSENSE_PUBLISHER_ID` | Enables `/ads.txt` (`pub-...`) |
-| `NEXT_PUBLIC_ADS_ENABLED`, `NEXT_PUBLIC_ADSENSE_CLIENT` | Turn on the reserved ad slot. Off by default |
+| `MET_USER_AGENT` | User-Agent sent to MET Norway. **Set this when you deploy.** MET's terms require one that identifies your site and a way to contact you; without it the app sends a generic development identifier |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Address shown on the contact page. Hidden when unset |
+| `PRERENDER_SLUGS` | Comma-separated cities to prerender at build. Defaults to `london-gb`, so a weather API outage cannot fail a deploy |
+| `GOOGLE_SITE_VERIFICATION` | Search Console token (the `content` value of Google's meta tag; the whole tag also works) |
+| `BING_SITE_VERIFICATION` | Bing Webmaster Tools `msvalidate.01` token |
+| `ADSENSE_PUBLISHER_ID` | Serves `/ads.txt` |
+| `NEXT_PUBLIC_ADS_ENABLED`, `NEXT_PUBLIC_ADSENSE_CLIENT` | Turn on the reserved ad slot. Off by default. Add the ad network's origins to the Content-Security-Policy in `next.config.ts` first |
+| `SITE_URL` | Origin used by `npm run indexnow` |
 
-See `DECISIONS.md`, `LICENSES.md` and `REVIEW.md`.
+## Data pipeline
+
+The generated files are committed. Rebuild them only when the source data changes.
+
+```bash
+node scripts/build-data.mjs <geonames-dir>            # cities15000.txt, admin1CodesASCII.txt, countryInfo.txt
+node scripts/build-climate.mjs <ghcn-dir> [slug...]   # ghcnd-stations.txt, ghcnd-inventory.txt
+node scripts/build-art.mjs <mockup-dir>
+```
+
+`build-data` writes the slug-sharded city records (`data/city/`), the search and geo shards (`public/data/<hash>/`), the proxy's big-city list and `src/data/version.ts`. The hash in the path lets the shards be cached forever, so never edit `public/data` by hand: rerun the script and the hash changes.
+
+Sources: GeoNames files from [download.geonames.org/export/dump](https://download.geonames.org/export/dump/), GHCN-Daily station lists from [NOAA NCEI](https://www.ncei.noaa.gov/pub/data/ghcn/daily/).
+
+## Project structure
+
+```
+src/
+  app/                 routes: city pages, home, places, best-time-to-visit, API, OG images, robots, sitemap
+  components/          forecast view, places app, sky art, tiles, shared UI
+  lib/                 MET client, forecast mapping, scenes and palettes, climate, cities, client store
+  data/                featured destinations, default places, generated lookups
+  proxy.ts             picks the home city for "/"
+data/
+  city/                city records sharded by slug (generated, GeoNames)
+  climate/             monthly averages for the 25 destinations (generated, NOAA and NASA)
+public/data/           search and geo shards (generated, GeoNames)
+scripts/               data and art build scripts, IndexNow submit
+assets/fonts/          Bricolage Grotesque for share cards, with its licence
+docs/                  design decisions, data licences, screenshots
+.github/workflows/     CI: lint, typecheck, build
+```
+
+## Deploying
+
+The repository is connected to a Vercel project. A push to `main` deploys production; any other branch or pull request gets a preview URL that search engines are told not to crawl.
+
+To run your own copy, import the repository into Vercel, set `NEXT_PUBLIC_SITE_URL` to your domain and `MET_USER_AGENT` to something like `yoursite.example https://yoursite.example/contact`, and deploy. Nothing else is required.
+
+Every response carries security headers (`nosniff`, a strict referrer policy, a permissions policy that only allows geolocation, `X-Frame-Options: DENY`), plus a Content-Security-Policy in production. All of them are set in `next.config.ts`.
+
+## Data and credits
+
+- Forecasts: [MET Norway](https://api.met.no/) Locationforecast 2.0, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and NLOD 2.0. Reformatted; MET Norway does not endorse this site.
+- Cities: [GeoNames](https://www.geonames.org/) cities15000, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The files in `data/city/`, `public/data/` and `src/data/big-cities.json` are derived from it.
+- Climate: [NOAA GHCN-Daily](https://www.ncei.noaa.gov/products/land-based-station/global-historical-climatology-network-daily) (public domain) and, where no station qualified, the [NASA POWER](https://power.larc.nasa.gov/) project. Each destination page names its source and station.
+- Font: [Bricolage Grotesque](https://github.com/ateliertriay/bricolage), SIL Open Font License 1.1 (`assets/fonts/OFL.txt`).
+- Sun and moon times: [suncalc](https://github.com/mourner/suncalc), BSD 2-Clause.
+
+Terms, re-check dates and per-source notes are in [docs/data-licences.md](docs/data-licences.md). Design and architecture decisions are logged in [docs/decisions.md](docs/decisions.md).
+
+## Licence
+
+The source code is published for reference and is not under an open-source licence: all rights reserved. Third-party data and fonts keep their own licences, listed above.

@@ -2,9 +2,10 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cacheLife } from "next/cache";
 import { ImageResponse } from "next/og";
-import type { City } from "./cities";
-import type { Forecast } from "./forecast";
-import { sceneOf } from "./forecast";
+import { toF } from "@/components/units";
+import { cityTitle, type City } from "./cities";
+import { sceneOf, type Forecast } from "./forecast";
+import { SITE } from "./site";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
@@ -24,8 +25,6 @@ async function fonts() {
     { name: "Bricolage", data: own(semibold), weight: 600 as const, style: "normal" as const },
   ];
 }
-
-const toF = (c: number) => Math.round((c * 9) / 5 + 32);
 
 function Circle({ x, y, r, color, opacity = 1 }: { x: number; y: number; r: number; color: string; opacity?: number }) {
   return <div style={{ position: "absolute", left: x - r, top: y - r, width: r * 2, height: r * 2, borderRadius: r, background: color, opacity }} />;
@@ -102,7 +101,7 @@ function Art({ f }: { f: Forecast }) {
 
 export async function cityOgImage(city: City, f: Forecast, best?: string) {
   const { palette: p } = sceneOf(f);
-  const where = city.featured ? city.label : `${city.name}, ${city.country}`;
+  const where = cityTitle(city);
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", background: p.sky, color: p.ink, fontFamily: "Bricolage" }}>
@@ -129,7 +128,7 @@ export async function cityOgImage(city: City, f: Forecast, best?: string) {
               </span>
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 28, fontWeight: 500, opacity: 0.8 }}>{best ? `Best time to visit: ${best} · weather.ayamk.in` : "weather.ayamk.in · hourly and 9-day forecast"}</div>
+          <div style={{ display: "flex", fontSize: 28, fontWeight: 500, opacity: 0.8 }}>{best ? `Best time to visit: ${best} · ${SITE.name}` : `${SITE.name} · hourly and 9-day forecast`}</div>
         </div>
       </div>
     ),
@@ -161,7 +160,7 @@ export async function brandOgImage() {
           <Cloud x={60} y={360} s={1.2} color="#36425C" />
         </div>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "64px", width: "100%", height: "100%" }}>
-          <div style={{ display: "flex", fontSize: 34, fontWeight: 600, opacity: 0.85 }}>weather.ayamk.in</div>
+          <div style={{ display: "flex", fontSize: 34, fontWeight: 600, opacity: 0.85 }}>{SITE.name}</div>
           <div style={{ display: "flex", flexDirection: "column", maxWidth: 720 }}>
             <div style={{ display: "flex", fontSize: 84, fontWeight: 600, lineHeight: 1.02, letterSpacing: -3 }}>The forecast, and the best time to go</div>
             <div style={{ display: "flex", marginTop: 26, fontSize: 34, fontWeight: 500, opacity: 0.75 }}>Hourly and 9-day weather, plus month-by-month climate for 25 destinations</div>

@@ -1,24 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import { ViewTransition, type CSSProperties } from "react";
-import featured from "@/data/featured.json";
 import { BackIcon } from "@/components/icons";
 import { NavLink } from "@/components/nav-link";
 import { RootVars } from "@/components/root-vars";
 import { SiteFooter } from "@/components/site-footer";
 import { Precip, T } from "@/components/units";
+import { FEATURED_LABEL, FEATURED_SLUGS } from "@/lib/cities";
 import { getAllClimates, MONTHS, rainTrusted, summarise, type Climate } from "@/lib/climate";
-import { SITE } from "@/lib/site";
+import { jsonLd } from "@/lib/seo";
+import { NIGHT_SKY, NIGHT_VARS, SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Best time to visit 25 destinations: weather by month",
+  title: "Best time to visit: weather by month",
   description:
     "Where to go each month, from London to Bali: average highs, rainfall and the best months for 25 popular destinations, calculated from weather-station records for 2015 to 2024.",
   alternates: { canonical: "/best-time-to-visit" },
 };
 
-export const viewport: Viewport = { themeColor: "#0b1020" };
-
-const LABEL = new Map(featured.map((f) => [f.slug, f.label]));
+export const viewport: Viewport = { themeColor: NIGHT_SKY };
 
 function heat(c: number) {
   const t = Math.max(0, Math.min(1, (c + 5) / 45));
@@ -32,9 +31,9 @@ function warmDry(c: Climate, m: number) {
 }
 
 export default async function BestTimePage() {
-  const climates = await getAllClimates(featured.map((f) => f.slug));
-  const rows = climates.map(([slug, c]) => ({ slug, name: LABEL.get(slug) ?? slug, c, s: summarise(c) }));
-  const jsonLd = {
+  const climates = await getAllClimates(FEATURED_SLUGS);
+  const rows = climates.map(([slug, c]) => ({ slug, name: FEATURED_LABEL.get(slug) ?? slug, c, s: summarise(c) }));
+  const breadcrumbs = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
@@ -45,8 +44,8 @@ export default async function BestTimePage() {
 
   return (
     <ViewTransition update="none">
-      <RootVars css="--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <RootVars css={NIGHT_VARS} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbs) }} />
       <div className="min-h-svh bg-night px-4 pt-4 pb-14 text-night-ink md:px-10 md:pt-8">
         <div className="mx-auto max-w-[1160px]">
           <header className="flex items-center gap-1" style={{ viewTransitionName: "site-header" }}>

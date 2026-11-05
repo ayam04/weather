@@ -29,7 +29,7 @@ export function ForecastHeader({ name, slug, temp, icon }: { name: string; slug:
           aria-hidden
           className="px-compact flex items-center gap-1.5 text-lg font-semibold opacity-0 md:text-[22px] md:[--compact-from:340px] md:[--compact-to:440px]"
         >
-          <WxIcon icon={icon} size={20} stroke={1.8} label={false} />
+          <WxIcon icon={icon} size={20} stroke={1.8} />
           <T c={temp} />
         </span>
         <NavLink

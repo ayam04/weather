@@ -1,18 +1,5 @@
 import type { Icon } from "@/lib/forecast";
 
-const LABEL: Record<Icon, string> = {
-  sun: "Sunny",
-  moon: "Clear",
-  sunCloud: "Partly cloudy",
-  moonCloud: "Partly cloudy",
-  cloud: "Cloudy",
-  fog: "Fog",
-  rain: "Rain",
-  storm: "Thunderstorm",
-  snow: "Snow",
-  sleet: "Sleet",
-};
-
 const CLOUD_HIGH = "M7 14h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 7.1 3.5 3.5 0 0 0 7 14z";
 
 function paths(icon: Icon) {
@@ -80,7 +67,7 @@ function paths(icon: Icon) {
   }
 }
 
-export function WxIcon({ icon, size = 24, stroke = 1.7, label = true }: { icon: Icon; size?: number; stroke?: number; label?: boolean }) {
+export function WxIcon({ icon, size = 24, stroke = 1.7 }: { icon: Icon; size?: number; stroke?: number }) {
   return (
     <svg
       width={size}
@@ -91,9 +78,7 @@ export function WxIcon({ icon, size = 24, stroke = 1.7, label = true }: { icon: 
       strokeWidth={stroke}
       strokeLinecap="round"
       strokeLinejoin="round"
-      role={label ? "img" : undefined}
-      aria-label={label ? LABEL[icon] : undefined}
-      aria-hidden={label ? undefined : true}
+      aria-hidden
       className="block shrink-0"
     >
       {paths(icon)}

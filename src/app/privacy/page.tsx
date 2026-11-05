@@ -40,9 +40,13 @@ export default function Privacy() {
         . This page will be updated before ads are switched on.
       </p>
       <h2>Contact</h2>
-      <p>
-        Questions about privacy: <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.
-      </p>
+      {SITE.contactEmail ? (
+        <p>
+          Questions about privacy: <a href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>.
+        </p>
+      ) : (
+        <p>Contact details are not configured for this deployment.</p>
+      )}
     </ProsePage>
   );
 }

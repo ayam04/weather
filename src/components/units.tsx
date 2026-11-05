@@ -2,18 +2,11 @@ import type { Clock } from "@/lib/forecast";
 
 export const toF = (c: number) => Math.round((c * 9) / 5 + 32);
 
-export function T({ c, deg = true }: { c: number; deg?: boolean }) {
-  const s = deg ? "°" : "";
+export function T({ c }: { c: number }) {
   return (
     <>
-      <span className="um">
-        {c}
-        {s}
-      </span>
-      <span className="ui">
-        {toF(c)}
-        {s}
-      </span>
+      <span className="um">{c}°</span>
+      <span className="ui">{toF(c)}°</span>
     </>
   );
 }

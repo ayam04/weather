@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { placeLine, type City } from "./cities";
+import { toF } from "@/components/units";
+import { cityTitle, placeLine, type City } from "./cities";
 import type { Forecast } from "./forecast";
 import { PALETTES } from "./scenes";
-import { SITE } from "./site";
+import { NIGHT_SKY, SITE } from "./site";
 
 export function cityMetadata(city: City, f: Forecast | null, opts: { canonical: string; home?: boolean }): Metadata {
-  const where = city.featured ? city.label : `${city.name}, ${city.country}`;
-  const title = opts.home ? "Weather today: hourly and 9-day forecast" : `${where} weather: today, hourly and 9-day forecast`;
-  const now = f ? `Now ${f.now.temp}°C (${Math.round((f.now.temp * 9) / 5 + 32)}°F) and ${f.condition.toLowerCase()} in ${city.name}. ` : "";
+  const where = cityTitle(city);
+  const title = opts.home
+    ? "Weather today: hourly and 9-day forecast"
+    : fitTitle(`${where} weather: hourly and 9-day forecast`, `${where} weather: 9-day forecast`, `${where} weather forecast`, `${where} weather`, `${city.name} weather`);
+  const now = f ? `Now ${f.now.temp}°C (${toF(f.now.temp)}°F) and ${f.condition.toLowerCase()} in ${city.name}. ` : "";
   const tail = city.featured
     ? "Hourly forecast, 9-day outlook, sunrise, UV, wind, and month-by-month climate averages for planning a trip."
     : "Hourly forecast, 9-day outlook, sunrise, UV, wind and humidity.";
   const description = `${now}${tail}`;
   return {
-    title: opts.home ? { absolute: `${title} | ${SITE.name}` } : title,
+    title: { absolute: opts.home ? `${title} | ${SITE.name}` : title },
     description,
     alternates: { canonical: opts.canonical },
     robots: city.featured || opts.home ? { index: true, follow: true } : { index: false, follow: true },
@@ -21,8 +24,17 @@ export function cityMetadata(city: City, f: Forecast | null, opts: { canonical: 
   };
 }
 
+const TITLE_MAX = 65;
+
+export function fitTitle(...options: string[]) {
+  const all = [...options.map((t) => `${t} | ${SITE.name}`), ...options];
+  return all.find((t) => t.length <= TITLE_MAX) ?? options[options.length - 1].slice(0, TITLE_MAX);
+}
+
+export const jsonLd = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c");
+
 export function sceneViewport(f: Forecast | null): Viewport {
-  return { themeColor: f ? PALETTES[f.sceneKey].sky : "#0b1020" };
+  return { themeColor: f ? PALETTES[f.sceneKey].sky : NIGHT_SKY };
 }
 
 export function cityJsonLd(city: City, canonical: string) {

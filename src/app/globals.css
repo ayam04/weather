@@ -4,7 +4,6 @@
   --font-sans: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --ease-wx: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --color-sky: var(--sky);
   --color-ink: var(--ink);
   --color-panel: var(--panel);
   --color-p-ink: var(--p-ink);
@@ -13,7 +12,6 @@
   --color-tile: var(--tile);
   --color-bar: var(--bar);
   --color-rain-bar: var(--rain-bar);
-  --color-sun: var(--sun);
   --color-night: #0b1020;
   --color-night-ink: #f3efe6;
   --color-night-muted: #9aa6bf;
@@ -115,10 +113,6 @@ html[data-u="i"] .ui {
     wx-up 700ms var(--ease-wx) both;
   animation-delay: calc(300ms + var(--i, 0) * 70ms);
 }
-.grow-x {
-  animation: wx-reveal-x 900ms var(--ease-wx) both;
-  animation-delay: calc(500ms + var(--i, 0) * 80ms);
-}
 .grow-xy {
   animation: wx-reveal-x 900ms var(--ease-wx) both;
   animation-delay: calc(500ms + var(--i, 0) * 80ms);
@@ -128,10 +122,6 @@ html[data-u="i"] .ui {
     animation-name: wx-reveal-y;
     animation-delay: calc(550ms + var(--i, 0) * 70ms);
   }
-}
-.grow-y {
-  animation: wx-reveal-y 900ms var(--ease-wx) both;
-  animation-delay: calc(550ms + var(--i, 0) * 70ms);
 }
 
 .dr {
@@ -363,14 +353,6 @@ svg.r-x {
 ::view-transition-group(*) {
   animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-::view-transition-image-pair(.morph) {
-  animation-name: wx-vt-blur;
-}
-@keyframes wx-vt-blur {
-  40% {
-    filter: blur(2px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

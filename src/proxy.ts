@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import big from "@/data/big-cities.json";
+import { isSlug } from "@/lib/slug";
 
 const DEFAULT = "london-gb";
 const CITIES = big as [string, number, number][];
@@ -25,7 +26,7 @@ function nearest(lat: number, lon: number) {
 
 export function proxy(req: NextRequest) {
   const saved = req.cookies.get("home")?.value;
-  let slug = saved && /^[a-z0-9-]{2,80}$/.test(saved) ? saved : null;
+  let slug = isSlug(saved) ? saved : null;
   if (!slug) {
     const lat = Number.parseFloat(req.headers.get("x-vercel-ip-latitude") ?? "");
     const lon = Number.parseFloat(req.headers.get("x-vercel-ip-longitude") ?? "");

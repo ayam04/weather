@@ -1,4 +1,4 @@
-import { ViewTransition, type ReactNode } from "react";
+import { ViewTransition } from "react";
 import { AdSlot } from "@/components/ad-slot";
 import { ClimateSection } from "@/components/climate-section";
 import { Destinations } from "@/components/destinations";
@@ -20,7 +20,7 @@ import { Hero } from "./hero";
 import { HoursStrip } from "./hours";
 import { CloudTile, FeelsTile, HumidityTile, MoonTile, PressureTile, RainTile, SunTile, UvTile, WindTile } from "./tiles";
 
-export async function ForecastView({ city, f, extra }: { city: City; f: Forecast; extra?: ReactNode }) {
+export async function ForecastView({ city, f }: { city: City; f: Forecast }) {
   const sc = sceneOf(f);
   const vars = Object.entries(paletteVars(sc.palette))
     .map(([k, v]) => `${k}:${v}`)
@@ -73,7 +73,6 @@ export async function ForecastView({ city, f, extra }: { city: City; f: Forecast
         {climate && <ClimateSection name={city.label} c={climate} />}
         <Nearby name={city.label} near={city.near} />
         <Destinations current={city.slug} />
-        {extra}
         <SiteFooter />
       </main>
     </ViewTransition>

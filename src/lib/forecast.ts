@@ -9,7 +9,6 @@ export type Hour = { iso: string; label: Clock | null; icon: Icon; temp: number;
 export type Day = { key: string; label: string; long: string; icon: Icon; hi: number; lo: number; precip: number; condition: string };
 
 export type Forecast = {
-  partial?: boolean;
   fetchedAt: string;
   fetchedLocal: Clock;
   tz: string;
@@ -36,7 +35,7 @@ export type Forecast = {
   days: Day[];
   rain12: { mm: number[]; total: number; kind: "none" | "light" | "amount"; from: Clock | null; trend: "heavy" | "easing" | null };
   curve: number[];
-  sun: { mode: "normal" | "polarDay" | "polarNight"; up: boolean; next: Clock | null; nextKind: "rise" | "set"; rise: Clock | null; set: Clock | null; progress: number; dayLength: string | null };
+  sun: { mode: "normal" | "polarDay" | "polarNight"; next: Clock | null; nextKind: "rise" | "set"; progress: number; dayLength: string | null };
   moon: { phase: number; name: string; illumination: number };
   uv: { now: number; peak: number; peakAt: Clock | null; level: string } | null;
 };
@@ -79,7 +78,7 @@ type Parsed = {
   variant: "day" | "night" | null;
 };
 
-export function parseSymbol(code: string): Parsed {
+function parseSymbol(code: string): Parsed {
   const m = code.match(/^(.*?)(?:_(day|night|polartwilight))?$/)!;
   const base = m[1].replace(/^lights/, "light");
   const v = m[2] === "polartwilight" ? "night" : ((m[2] as "day" | "night" | undefined) ?? null);
@@ -206,14 +205,15 @@ function rainSummary(mm: number[], labels: (Clock | null)[]): Omit<Forecast["rai
   return { total, kind, from: first > 0 ? labels[first] : null, trend };
 }
 
-export function mapForecast(json: MetResponse, city: City, fetchedAt = new Date()): Forecast {
+export function mapForecast(json: MetResponse, city: City, fetchedAt = new Date()): Forecast | null {
   const ts = json.properties.timeseries;
   const tz = city.tz;
   const fmt = clockFmt(tz);
   const dayKey = dayKeyFmt(tz);
   const hod = hourOfDay(tz);
   const nowMs = fetchedAt.getTime();
-  const startIdx = Math.max(0, ts.findIndex((e) => new Date(e.time).getTime() + 3600_000 > nowMs));
+  const startIdx = ts.findIndex((e) => new Date(e.time).getTime() + 3600_000 > nowMs);
+  if (startIdx < 0) return null;
   const series = ts.slice(startIdx);
   const first = series[0];
   const firstSym = first.data.next_1_hours?.summary?.symbol_code ?? first.data.next_6_hours?.summary?.symbol_code ?? "cloudy";
@@ -302,28 +302,19 @@ export function mapForecast(json: MetResponse, city: City, fetchedAt = new Date(
   let sun: Forecast["sun"];
   if (!valid(times.sunrise) || !valid(times.sunset)) {
     const up = SunCalc.getPosition(times.solarNoon, city.lat, city.lon).altitude > 0;
-    sun = { mode: up ? "polarDay" : "polarNight", up, next: null, nextKind: up ? "set" : "rise", rise: null, set: null, progress: up ? 0.5 : 0, dayLength: up ? "24 h" : "0 h" };
+    sun = { mode: up ? "polarDay" : "polarNight", next: null, nextKind: up ? "set" : "rise", progress: up ? 0.5 : 0, dayLength: up ? "24 h" : "0 h" };
   } else {
     const rise = times.sunrise.getTime();
     const set = times.sunset.getTime();
     const len = Math.round((set - rise) / 60000);
     const dayLength = `${Math.floor(len / 60)} h ${len % 60} min`;
     if (nowMs < rise) {
-      sun = { mode: "normal", up: false, next: fmt.time(times.sunrise), nextKind: "rise", rise: fmt.time(times.sunrise), set: fmt.time(times.sunset), progress: 0, dayLength };
+      sun = { mode: "normal", next: fmt.time(times.sunrise), nextKind: "rise", progress: 0, dayLength };
     } else if (nowMs < set) {
-      sun = { mode: "normal", up: true, next: fmt.time(times.sunset), nextKind: "set", rise: fmt.time(times.sunrise), set: fmt.time(times.sunset), progress: (nowMs - rise) / (set - rise), dayLength };
+      sun = { mode: "normal", next: fmt.time(times.sunset), nextKind: "set", progress: (nowMs - rise) / (set - rise), dayLength };
     } else {
       const t2 = SunCalc.getTimes(new Date(nowMs + 86400_000), city.lat, city.lon);
-      sun = {
-        mode: "normal",
-        up: false,
-        next: valid(t2.sunrise) ? fmt.time(t2.sunrise) : null,
-        nextKind: "rise",
-        rise: fmt.time(times.sunrise),
-        set: fmt.time(times.sunset),
-        progress: 1,
-        dayLength,
-      };
+      sun = { mode: "normal", next: valid(t2.sunrise) ? fmt.time(t2.sunrise) : null, nextKind: "rise", progress: 1, dayLength };
     }
   }
 

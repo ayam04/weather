@@ -3,10 +3,10 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { PinIcon } from "@/components/icons";
 import { NavLink } from "@/components/nav-link";
+import { toF } from "@/components/units";
 import type { Snap } from "@/lib/snapshot";
 import { CARD, CardArt } from "./card-art";
 
-const toF = (c: number) => Math.round((c * 9) / 5 + 32);
 const revealed = new Set<string>();
 
 function clockParts(tz: string, now: number) {

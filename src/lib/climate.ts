@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cacheLife } from "next/cache";
+import { isSlug } from "./slug";
 
-export type ClimateMonth = { hi: number; lo: number; rain: number; wet: number };
+type ClimateMonth = { hi: number; lo: number; rain: number; wet: number };
 export type Climate = {
   source: string;
   flags: string[];
@@ -18,7 +19,7 @@ export type Climate = {
 export async function getClimate(slug: string): Promise<Climate | null> {
   "use cache";
   cacheLife("max");
-  if (!/^[a-z0-9-]{2,80}$/.test(slug)) return null;
+  if (!isSlug(slug)) return null;
   try {
     return JSON.parse(await readFile(path.join(process.cwd(), "data", "climate", `${slug}.json`), "utf8"));
   } catch {
@@ -64,7 +65,7 @@ export function summarise(c: Climate) {
     basis = "comfort";
   }
   best = [...best].sort((a, b) => a - b);
-  return { warmest, coolest, wettest, driest, best: ranges(best), bestMonths: [...best].sort((x, y) => x - y), basis };
+  return { warmest, coolest, wettest, driest, best: ranges(best), bestMonths: best, basis };
 }
 
 function ranges(months: number[]): string {

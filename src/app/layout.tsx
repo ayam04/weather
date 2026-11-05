@@ -3,7 +3,7 @@ import { Bricolage_Grotesque } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { MotionRuntime } from "@/components/motion-runtime";
 import { PREFS_SCRIPT } from "@/components/units";
-import { SITE } from "@/lib/site";
+import { NIGHT_SKY, SITE } from "@/lib/site";
 import "./globals.css";
 
 const font = Bricolage_Grotesque({
@@ -34,7 +34,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b1020",
+  themeColor: NIGHT_SKY,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

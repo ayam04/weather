@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
@@ -125,7 +125,7 @@ for (const c of cities) {
 }
 for (const [shard, map] of byShard) writeFileSync(join("data/city", `${shard}.json`), JSON.stringify(map));
 
-if (existsSync("public/data")) rmSync("public/data", { recursive: true, force: true });
+rmSync("public/data", { recursive: true, force: true });
 const pubRoot = join("public/data", hash);
 mkdirSync(join(pubRoot, "s"), { recursive: true });
 mkdirSync(join(pubRoot, "g"), { recursive: true });

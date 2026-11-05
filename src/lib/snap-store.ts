@@ -1,11 +1,12 @@
 import { DEFAULT_PLACES, type Place } from "@/data/default-places";
+import { isSlug } from "./slug";
 import type { Snap } from "./snapshot";
 
 export const FRESH_MS = 30 * 60 * 1000;
 export const SEED_TOLERANCE_MS = FRESH_MS + 30 * 60 * 1000;
 
-export type Here = Place & { source?: "ip" | "gps" };
-export type PlacesState = { places: Place[]; here: Here | null; snaps: Record<string, Snap>; failed: Record<string, boolean> };
+type Here = Place & { source?: "ip" | "gps" };
+type PlacesState = { places: Place[]; here: Here | null; snaps: Record<string, Snap>; failed: Record<string, boolean> };
 
 const read = <T>(k: string): T | null => {
   try {
@@ -20,10 +21,20 @@ const write = (k: string, v: unknown) => {
     localStorage.setItem(k, JSON.stringify(v));
   } catch {}
 };
+const drop = (k: string) => {
+  try {
+    localStorage.removeItem(k);
+  } catch {}
+};
 
-export const readSnap = (slug: string) => read<Snap>(`snap:${slug}`);
+const isPlace = (p: unknown): p is Place => {
+  const x = p as Partial<Place> | null;
+  return typeof x?.slug === "string" && isSlug(x.slug) && typeof x.name === "string";
+};
+
+const readSnap = (slug: string) => read<Snap>(`snap:${slug}`);
 export const age = (s: Snap | null | undefined) => (s ? Date.now() - Date.parse(s.fetchedAt) : Infinity);
-export const isFresh = (s: Snap | null | undefined) => age(s) < FRESH_MS;
+const isFresh = (s: Snap | null | undefined) => age(s) < FRESH_MS;
 
 export function newer(a: Snap | null | undefined, b: Snap | null | undefined) {
   if (!a) return b ?? null;
@@ -37,9 +48,11 @@ const listeners = new Set<() => void>();
 let storageBound = false;
 
 function load(): PlacesState {
-  const saved = read<Place[]>("places");
-  const places = saved && saved.length ? saved : DEFAULT_PLACES;
-  const here = read<Here>("here");
+  const saved = read<unknown>("places");
+  const valid = Array.isArray(saved) ? saved.filter(isPlace) : [];
+  const places = valid.length ? valid : DEFAULT_PLACES;
+  const stored = read<Here>("here");
+  const here = isPlace(stored) ? stored : null;
   const snaps: Record<string, Snap> = {};
   for (const p of [...(here ? [here] : []), ...places]) {
     const s = readSnap(p.slug);
@@ -77,8 +90,16 @@ export function subscribePlaces(cb: () => void) {
 }
 
 export function setPlaces(places: Place[]) {
+  const st = getPlacesState();
+  const keep = new Set([...places.map((p) => p.slug), st.here?.slug]);
+  const snaps = { ...st.snaps };
+  for (const p of st.places) {
+    if (keep.has(p.slug)) continue;
+    drop(`snap:${p.slug}`);
+    delete snaps[p.slug];
+  }
   write("places", places);
-  patch({ places });
+  patch({ places, snaps });
 }
 
 export function setHere(here: Here) {
@@ -89,7 +110,7 @@ export function setHere(here: Here) {
   patch({ here });
 }
 
-export function putSnap(s: Snap) {
+function putSnap(s: Snap) {
   const st = getPlacesState();
   const cur = newer(st.snaps[s.slug], readSnap(s.slug));
   const failed = st.failed[s.slug] ? { ...st.failed, [s.slug]: false } : st.failed;
@@ -132,6 +153,7 @@ export function loadSnap(slug: string, force = false): Promise<Snap | null> {
 }
 
 let defaultsInflight: Promise<void> | null = null;
+const DEFAULT_SLUGS = new Set(DEFAULT_PLACES.map((p) => p.slug));
 
 export function loadDefaults(): Promise<void> {
   defaultsInflight ??= fetch("/api/defaults")
@@ -141,6 +163,10 @@ export function loadDefaults(): Promise<void> {
       Object.values(all).forEach(putSnap);
     })
     .catch(() => {})
+    .then(() => {
+      const { snaps, places } = getPlacesState();
+      for (const p of places) if (DEFAULT_SLUGS.has(p.slug) && !newer(snaps[p.slug], readSnap(p.slug))) void loadSnap(p.slug);
+    })
     .finally(() => {
       defaultsInflight = null;
     });

@@ -1,16 +1,25 @@
 {
   "name": "weather",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Live weather with animated skies, an hourly and 9-day forecast, and month-by-month climate guides.",
+  "homepage": "https://weather.ayamk.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayam04/weather.git"
+  },
+  "bugs": "https://github.com/ayam04/weather/issues",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
     "data:cities": "node scripts/build-data.mjs",
     "data:climate": "node scripts/build-climate.mjs",
     "data:art": "node scripts/build-art.mjs",
-    "typecheck": "next typegen && tsc --noEmit",
     "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
@@ -22,7 +31,7 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/suncalc": "^1.9.2",

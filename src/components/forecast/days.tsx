@@ -24,7 +24,7 @@ export function DaysList({ days }: { days: Day[] }) {
           >
             <span className="font-semibold md:order-1 md:text-sm">{d.label}</span>
             <span className="flex h-[22px] w-[22px] md:order-2 md:h-6 md:w-6">
-              <WxIcon icon={d.icon} size={22} stroke={1.7} label={false} />
+              <WxIcon icon={d.icon} size={22} stroke={1.7} />
             </span>
             <span className="text-right text-xs font-medium text-rain-bar md:order-6 md:h-4 md:text-center">
               {d.precip >= 0.5 ? <Precip mm={d.precip} /> : ""}

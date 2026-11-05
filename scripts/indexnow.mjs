@@ -1,7 +1,12 @@
-import { readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 
 const SITE = process.env.SITE_URL ?? "https://weather.ayamk.in";
-const key = readFileSync("src/data/indexnow.ts", "utf8").match(/"([a-f0-9]{32})"/)[1];
+const keyFiles = readdirSync("public").filter((f) => /^[a-f0-9]{32}\.txt$/.test(f));
+if (keyFiles.length !== 1) {
+  console.error(`expected exactly one public/<32 hex chars>.txt IndexNow key file, found ${keyFiles.length}`);
+  process.exit(1);
+}
+const key = keyFiles[0].slice(0, 32);
 
 const keyRes = await fetch(`${SITE}/${key}.txt`);
 if (!keyRes.ok || (await keyRes.text()).trim() !== key) {

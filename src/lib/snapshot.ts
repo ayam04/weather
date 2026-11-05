@@ -18,7 +18,7 @@ export type Snap = {
   fetchedAt: string;
 };
 
-export const toSnap = (city: City, f: Forecast): Snap => ({
+const toSnap = (city: City, f: Forecast): Snap => ({
   slug: city.slug,
   name: city.label,
   tz: city.tz,

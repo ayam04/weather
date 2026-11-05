@@ -106,18 +106,16 @@ for (const { slug } of featured) {
   const rec = lookup(slug);
   if (!rec) throw new Error(`unknown slug ${slug}`);
   const here = [rec[4], rec[5]];
-  const near = stations
-    ? [...stations.values()]
-        .filter((s) => s.vars.TMAX || s.vars.PRCP)
-        .filter((s) => ["TMAX", "TMIN", "PRCP"].some((v) => s.vars[v] && s.vars[v][1] >= Y1 && s.vars[v][0] <= Y0 + 2))
-        .map((s) => {
-          const d = km(here, [s.lat, s.lon]);
-          return { s, d, rank: AIRPORT.test(s.name) ? d * 0.6 : d };
-        })
-        .filter((x) => x.d <= 50)
-        .sort((a, b) => a.rank - b.rank)
-        .slice(0, 6)
-    : [];
+  const near = [...stations.values()]
+    .filter((s) => s.vars.TMAX || s.vars.PRCP)
+    .filter((s) => ["TMAX", "TMIN", "PRCP"].some((v) => s.vars[v] && s.vars[v][1] >= Y1 && s.vars[v][0] <= Y0 + 2))
+    .map((s) => {
+      const d = km(here, [s.lat, s.lon]);
+      return { s, d, rank: AIRPORT.test(s.name) ? d * 0.6 : d };
+    })
+    .filter((x) => x.d <= 50)
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, 6);
   let temps = null;
   let precip = null;
   for (const { s, d } of near) {
@@ -130,7 +128,6 @@ for (const { slug } of featured) {
     console.log(`  ${slug} ${s.id} ${s.name} ${d.toFixed(1)}km temps:${sum.temps ? "ok" : "-"} precip:${sum.precip ? "ok" : "-"}${usedT ? " [T]" : ""}${usedP ? " [P]" : ""}`);
     await sleep(700);
   }
-  let source = "NOAA GHCN-Daily";
   const pw = await powerFallback(rec[4], rec[5]);
   const flags = [];
   if (precip && pw.precip) {
@@ -142,13 +139,11 @@ for (const { slug } of featured) {
       precip = null;
     }
   }
-  if (true) {
-    if (!temps && pw.temps) temps = { station: "NASA POWER model grid", km: 0, data: pw.temps };
-    if (!precip && pw.precip) precip = { station: "NASA POWER model grid", km: 0, data: pw.precip };
-    if (temps.station.startsWith("NASA")) flags.push("temps-modelled");
-    if (precip.station.startsWith("NASA")) flags.push("rain-modelled");
-    source = temps.station.startsWith("NASA") && precip.station.startsWith("NASA") ? "NASA POWER" : precip.station.startsWith("NASA") || temps.station.startsWith("NASA") ? "NOAA GHCN-Daily and NASA POWER" : "NOAA GHCN-Daily";
-  }
+  if (!temps && pw.temps) temps = { station: "NASA POWER model grid", km: 0, data: pw.temps };
+  if (!precip && pw.precip) precip = { station: "NASA POWER model grid", km: 0, data: pw.precip };
+  if (temps.station.startsWith("NASA")) flags.push("temps-modelled");
+  if (precip.station.startsWith("NASA")) flags.push("rain-modelled");
+  const source = temps.station.startsWith("NASA") && precip.station.startsWith("NASA") ? "NASA POWER" : precip.station.startsWith("NASA") || temps.station.startsWith("NASA") ? "NOAA GHCN-Daily and NASA POWER" : "NOAA GHCN-Daily";
   const months = temps.data.map((t, i) => ({ hi: t.hi, lo: t.lo, rain: precip.data[i].rain, wet: precip.data[i].wet }));
   writeFileSync(
     join("data/climate", `${slug}.json`),

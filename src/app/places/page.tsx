@@ -5,6 +5,7 @@ import { NavLink } from "@/components/nav-link";
 import { PlacesApp } from "@/components/places/places-app";
 import { RootVars } from "@/components/root-vars";
 import { SiteFooter } from "@/components/site-footer";
+import { NIGHT_SKY, NIGHT_VARS } from "@/lib/site";
 import { getDefaultSnaps } from "@/lib/snapshot";
 
 export const metadata: Metadata = {
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export const viewport: Viewport = { themeColor: "#0b1020" };
+export const viewport: Viewport = { themeColor: NIGHT_SKY };
 
 export default async function PlacesPage() {
   const seed = await getDefaultSnaps();
   return (
     <ViewTransition update="none">
-      <RootVars css="--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)" />
+      <RootVars css={NIGHT_VARS} />
       <PlacesApp seed={seed} />
       <section aria-labelledby="popular-h" className="bg-night px-4 pb-10 text-night-ink md:px-10 md:pb-14">
         <div className="mx-auto max-w-[1160px]">

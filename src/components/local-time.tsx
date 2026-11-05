@@ -9,7 +9,7 @@ function parts(tz: string, d: Date) {
   return { day, h24, h12 };
 }
 
-export function LocalTime({ tz, withDay = true }: { tz: string; withDay?: boolean }) {
+export function LocalTime({ tz }: { tz: string }) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function LocalTime({ tz, withDay = true }: { tz: string; withDay?: boolea
   return (
     <span className="animate-[wx-fade_400ms_ease_both]">
       <span className="sr-only">Local time </span>
-      {withDay && `${p.day} `}
+      {`${p.day} `}
       <span className="um">{p.h24}</span>
       <span className="ui">{p.h12}</span>
     </span>

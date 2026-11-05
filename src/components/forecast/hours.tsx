@@ -19,7 +19,7 @@ export function HoursStrip({ hours }: { hours: Hour[] }) {
         >
           <span className="text-[13px] text-p-muted md:text-sm">{h.label ? <Clk t={h.label} /> : "Now"}</span>
           <span className="flex h-[26px] w-[26px] md:h-7 md:w-7">
-            <WxIcon icon={h.icon} size={26} stroke={1.6} label={false} />
+            <WxIcon icon={h.icon} size={26} stroke={1.6} />
           </span>
           <span className="text-[17px] font-semibold md:text-[19px]">
             <T c={h.temp} />
