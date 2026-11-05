@@ -14,7 +14,7 @@ Live weather for 34,000 cities with an animated sky that matches the conditions 
 
 ## Features
 
-- **Scene per condition.** Nine sky scenes (clear, cloudy, rain, storm, snow, each by day and night) drive the art and the whole colour palette, so a city at 2 AM looks like 2 AM.
+- **Scene per condition.** Nine sky scenes (clear, cloudy, rain and snow, each by day and night, plus storm) drive the art and the whole colour palette, so a city at 2 AM looks like 2 AM.
 - **Forecast.** Current conditions, the next 24 hours, a 9-day outlook, and tiles for rain, wind, sunrise and sunset, humidity, feels-like, UV, pressure, cloud cover and moon phase.
 - **City search across 34,197 places** with more than 15,000 people. Search and nearest-city lookup run in the browser against static files, so they cost no server calls.
 - **Places.** A saved list of cities with live temperature and local time, kept on the device. No account.
