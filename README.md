@@ -20,8 +20,9 @@ Node 24. No environment variables are required. Optional ones are listed below.
 | --- | --- | --- |
 | `/` | `src/proxy.ts` picks a city (saved `home` cookie, else nearest city over 100k people to Vercel's IP location) and rewrites to `/home/<slug>` | 1 tiny proxy run, page from cache |
 | `/weather/<slug>` | Static page from the CDN. Regenerated in the background at most every 30 minutes, only when visited | 0 functions on a cache hit |
-| `/places` | Static shell. Saved places live in `localStorage`; each card reads a cached snapshot first | CDN hits only |
-| `/api/now/<slug>` | Small JSON for Places cards, `s-maxage=1800` at the CDN | 1 function per city per 30 min |
+| `/places` | Static page with the 12 default cities' current weather built in (refreshed every 15 min). Saved places and snapshots live in `localStorage` through one shared store (`src/lib/snap-store.ts`) | CDN hit; a first-time visitor makes no weather requests |
+| `/api/defaults` | All 12 default snapshots in one response, used only when a served Places page is older than its window | 1 function per 15 min |
+| `/api/now/<slug>` | Small JSON for a user-added city, `s-maxage=1800` at the CDN. Fetched when a card is added, or ahead of time when a search result is hovered or arrowed to | 1 function per city per 30 min |
 | City search | Prefix shards in `public/data/<version>/s/`, immutable, fetched once and filtered on the device | 0 functions |
 | Precise location | Geo-grid shards in `public/data/<version>/g/`, nearest city computed on the device | 0 functions |
 
