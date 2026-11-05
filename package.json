@@ -9,7 +9,7 @@
     "url": "git+https://github.com/ayam04/weather.git"
   },
   "bugs": "https://github.com/ayam04/weather/issues",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

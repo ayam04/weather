@@ -149,4 +149,4 @@ Terms, re-check dates and per-source notes are in [docs/data-licences.md](docs/d
 
 ## Licence
 
-The source code is published for reference and is not under an open-source licence: all rights reserved. Third-party data and fonts keep their own licences, listed above.
+The source code is under the [MIT License](LICENSE). The data and font listed above keep their own licences: the files derived from GeoNames, NOAA and NASA, and the Bricolage Grotesque font, are not covered by MIT.
