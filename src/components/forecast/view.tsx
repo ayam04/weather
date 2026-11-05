@@ -4,6 +4,7 @@ import { ClimateSection } from "@/components/climate-section";
 import { Destinations } from "@/components/destinations";
 import { Nearby } from "@/components/nearby";
 import { Reveal } from "@/components/reveal";
+import { RootVars } from "@/components/root-vars";
 import { ShareButton } from "@/components/share-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SkyArt } from "@/components/sky-art";
@@ -28,7 +29,7 @@ export async function ForecastView({ city, f, extra }: { city: City; f: Forecast
 
   return (
     <ViewTransition update="none">
-      <style>{`:root{${vars}}`}</style>
+      <RootVars css={vars} />
       <SkyArt layers={sc.layers} />
       <ForecastHeader name={city.label} slug={city.slug} temp={f.now.temp} icon={f.hours[0]?.icon ?? "cloud"} />
       <main className="relative z-10" data-fetched-at={f.fetchedAt}>

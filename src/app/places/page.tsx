@@ -3,6 +3,7 @@ import { ViewTransition } from "react";
 import featured from "@/data/featured.json";
 import { NavLink } from "@/components/nav-link";
 import { PlacesApp } from "@/components/places/places-app";
+import { RootVars } from "@/components/root-vars";
 import { SiteFooter } from "@/components/site-footer";
 import { getDefaultSnaps } from "@/lib/snapshot";
 
@@ -19,7 +20,7 @@ export default async function PlacesPage() {
   const seed = await getDefaultSnaps();
   return (
     <ViewTransition update="none">
-      <style>{`:root{--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)}`}</style>
+      <RootVars css="--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)" />
       <PlacesApp seed={seed} />
       <section aria-labelledby="popular-h" className="bg-night px-4 pb-10 text-night-ink md:px-10 md:pb-14">
         <div className="mx-auto max-w-[1160px]">

@@ -3,6 +3,7 @@ import { ViewTransition, type CSSProperties } from "react";
 import featured from "@/data/featured.json";
 import { BackIcon } from "@/components/icons";
 import { NavLink } from "@/components/nav-link";
+import { RootVars } from "@/components/root-vars";
 import { SiteFooter } from "@/components/site-footer";
 import { Precip, T } from "@/components/units";
 import { getAllClimates, MONTHS, rainTrusted, summarise, type Climate } from "@/lib/climate";
@@ -44,7 +45,7 @@ export default async function BestTimePage() {
 
   return (
     <ViewTransition update="none">
-      <style>{`:root{--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)}`}</style>
+      <RootVars css="--sky:#0b1020;--ink:#f3efe6;--rule:rgba(243,239,230,0.12)" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="min-h-svh bg-night px-4 pt-4 pb-14 text-night-ink md:px-10 md:pt-8">
         <div className="mx-auto max-w-[1160px]">

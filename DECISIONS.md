@@ -29,3 +29,6 @@ Why: the mockup's minute-by-minute bars need nowcast data MET only offers for th
 
 2026-11-05 Decision: crawlers get the same cached page as browsers (`htmlLimitedBots` set to a pattern no real crawler sends).
 Why: Next's default bot list (Bingbot, DuckDuckBot, Yandex, Applebot, Google-InspectionTool, link-preview bots) bypassed the CDN with a fresh server render per visit, 60% heavier because partial prefetching embeds a second copy of the page. Every page's metadata and content are already in the cached HTML, so the blocking bot render added cost and size with nothing to gain.
+
+2026-11-05 Decision: page colours go through `RootVars`, which switches its `:root` stylesheet off (`media="not all"`) while its page is hidden.
+Why: Next keeps visited pages in the DOM, hidden, for instant back navigation. A hidden `<style>` still applies, so a day page left earlier could paint its colours over a night page (moon art on a day sky). Effect cleanup alone missed hides after back or forward navigation, and `sheet.disabled` was reset when React reordered the hidden pages, so it watches the element's own `display` and uses the `media` attribute, which survives moves.
