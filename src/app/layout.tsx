@@ -13,6 +13,8 @@ const font = Bricolage_Grotesque({
   display: "swap",
 });
 
+const token = (v?: string) => (v?.match(/content=["']([^"']+)["']/)?.[1] ?? v)?.trim() || undefined;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: { default: "Weather today: hourly and 9-day forecast", template: `%s | ${SITE.name}` },
@@ -23,8 +25,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true, "max-image-preview": "large" },
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
-    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+    google: token(process.env.GOOGLE_SITE_VERIFICATION),
+    other: token(process.env.BING_SITE_VERIFICATION) ? { "msvalidate.01": token(process.env.BING_SITE_VERIFICATION)! } : undefined,
   },
 };
 
